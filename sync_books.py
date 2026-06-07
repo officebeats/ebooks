@@ -399,6 +399,31 @@ def main():
         except:
             pass
 
+    # Update index.html dynamically if it exists
+    INDEX_HTML_PATH = os.path.join(REPO_DIR, "index.html")
+    if os.path.exists(INDEX_HTML_PATH):
+        try:
+            with open(INDEX_HTML_PATH, 'r', encoding='utf-8') as f:
+                html_content = f.read()
+            # Replace placeholder link or old link
+            updated_html = re.sub(
+                r'href="([^"]+)"\s+id="onedrive-shared-btn"',
+                f'href="{shared_link_placeholder}" id="onedrive-shared-btn"',
+                html_content
+            )
+            # Also replace any other href="[Insert OneDrive Shared Link Here]"
+            updated_html = updated_html.replace('[Insert OneDrive Shared Link Here]', shared_link_placeholder)
+            
+            if updated_html != html_content:
+                if not dry_run:
+                    with open(INDEX_HTML_PATH, 'w', encoding='utf-8') as f:
+                        f.write(updated_html)
+                    print("index.html updated with OneDrive shared link.")
+                else:
+                    print(f"[Dry Run] Would update index.html with OneDrive shared link: {shared_link_placeholder}")
+        except Exception as html_err:
+            print(f"Failed to update index.html: {html_err}")
+
     md = "# eBooks Repository\n\n"
     md += "A private repository to index and manage your personal EPUB library. \n\n"
     md += "### Quick Access Links\n"
@@ -467,11 +492,11 @@ def main():
         if "GITHUB_TOKEN" in env and "dummy" in env["GITHUB_TOKEN"].lower():
             del env["GITHUB_TOKEN"]
             
-        subprocess.run(["git", "add", "README.md", "books.json"], cwd=REPO_DIR, env=env, check=True)
+        subprocess.run(["git", "add", "README.md", "books.json", "index.html", "recommendations.md", "recommendations.json"], cwd=REPO_DIR, env=env, check=True)
         # Check if anything to commit
         status = subprocess.run(["git", "status", "--porcelain"], cwd=REPO_DIR, capture_output=True, text=True, check=True)
         if status.stdout.strip():
-            subprocess.run(["git", "commit", "-m", "Auto-update book database and README.md"], cwd=REPO_DIR, env=env, check=True)
+            subprocess.run(["git", "commit", "-m", "Auto-update book database, web portal, and recommendations"], cwd=REPO_DIR, env=env, check=True)
             subprocess.run(["git", "push"], cwd=REPO_DIR, env=env, check=True)
             print("Successfully committed and pushed updates to GitHub!")
         else:
