@@ -657,9 +657,25 @@
         }
 
         .modal-description {
-            font-size: 0.95rem;
+            font-size: 0.92rem;
             color: var(--text-secondary);
-            line-height: 1.6;
+            line-height: 1.55;
+            max-height: 160px;
+            overflow-y: auto;
+            padding-right: 0.5rem;
+        }
+        .modal-description::-webkit-scrollbar {
+            width: 5px;
+        }
+        .modal-description::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.01);
+        }
+        .modal-description::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 99px;
+        }
+        .modal-description::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-accent);
         }
 
         .subject-tags {
@@ -711,11 +727,16 @@
                 font-size: 0.75rem;
             }
             .stats-bar {
-                gap: 0.3rem;
+                gap: 0.2rem !important;
+                flex-wrap: nowrap !important;
+                justify-content: space-between !important;
+                width: 100%;
             }
             .stat-item {
-                font-size: 0.7rem;
-                padding: 0.15rem 0.5rem;
+                font-size: 0.65rem !important;
+                padding: 0.1rem 0.35rem !important;
+                flex: 1;
+                justify-content: center;
             }
             .btn-link {
                 padding: 0.25rem 0.5rem;
@@ -859,6 +880,9 @@
             .modal-description {
                 font-size: 0.78rem;
                 line-height: 1.4;
+                max-height: 120px;
+                overflow-y: auto;
+                padding-right: 0.4rem;
             }
             .modal-actions {
                 flex-direction: column;
@@ -1074,6 +1098,80 @@
         }
         .lightbox-close:hover {
             color: var(--text-primary);
+        }
+        /* Premium Animated Download Button */
+        .btn-download {
+            background: linear-gradient(135deg, var(--primary-accent) 0%, var(--secondary-accent) 100%) !important;
+            border: none !important;
+            color: white !important;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        
+        .btn-download::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -150%;
+            width: 50%;
+            height: 100%;
+            background: linear-gradient(
+                90deg,
+                rgba(255, 255, 255, 0) 0%,
+                rgba(255, 255, 255, 0.3) 50%,
+                rgba(255, 255, 255, 0) 100%
+            );
+            transform: skewX(-25deg);
+            z-index: -1;
+            transition: none;
+        }
+        
+        .btn-download:hover::before {
+            animation: shineSweep 1.5s infinite ease-in-out;
+        }
+        
+        @keyframes shineSweep {
+            0% { left: -150%; }
+            100% { left: 150%; }
+        }
+        
+        .btn-download:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 210, 141, 0.4) !important;
+        }
+        
+        .btn-download:active {
+            transform: translateY(0);
+        }
+        
+        /* Sliding Arrow Micro-animation */
+        .btn-download:hover .download-icon .arrow {
+            animation: arrowSlide 1s infinite ease-in-out;
+        }
+        
+        @keyframes arrowSlide {
+            0% {
+                transform: translateY(0);
+                opacity: 1;
+            }
+            30% {
+                transform: translateY(4px);
+                opacity: 0.3;
+            }
+            30.1% {
+                transform: translateY(-6px);
+                opacity: 0;
+            }
+            70% {
+                transform: translateY(-6px);
+                opacity: 0;
+            }
+            100% {
+                transform: translateY(0);
+                opacity: 1;
+            }
         }
     </style>
     
@@ -1618,8 +1716,11 @@
                             Info
                         </button>
                         ${b.onedrive_share_link ? `
-                            <a href="${b.onedrive_share_link}" class="btn" target="_blank" style="text-decoration: none;">
-                                <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                            <a href="${b.onedrive_share_link}" class="btn btn-download" target="_blank" style="text-decoration: none;">
+                                <svg class="download-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path class="tray" d="M4 17v1a3 3 0 003 3h10a3 3 0 003-3v-1" />
+                                    <path class="arrow" d="M12 4v12m0 0l-4-4m4 4l4-4" />
+                                </svg>
                                 Download
                             </a>
                         ` : ''}
@@ -1822,8 +1923,11 @@
         
         if (book.onedrive_share_link) {
             modalActions.innerHTML += `
-                <a href="${book.onedrive_share_link}" class="btn btn-primary" target="_blank" style="text-decoration: none;">
-                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                <a href="${book.onedrive_share_link}" class="btn btn-download" target="_blank" style="text-decoration: none; padding: 0.5rem 1.25rem; font-size: 0.88rem;">
+                    <svg class="download-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path class="tray" d="M4 17v1a3 3 0 003 3h10a3 3 0 003-3v-1" />
+                        <path class="arrow" d="M12 4v12m0 0l-4-4m4 4l4-4" />
+                    </svg>
                     Download Book
                 </a>
             `;
