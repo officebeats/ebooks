@@ -159,8 +159,8 @@ def generate_links_for_db(access_token, onedrive_root_folder, force_update=False
         }
 
         try:
-            # We do a POST request to create the sharing link
-            response = requests.post(create_link_url, headers=headers, json=payload)
+            # We do a POST request to create the sharing link (with 15 second timeout)
+            response = requests.post(create_link_url, headers=headers, json=payload, timeout=15)
             
             if response.status_code in [200, 201]:
                 res_data = response.json()

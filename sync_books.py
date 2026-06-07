@@ -129,6 +129,166 @@ def get_epub_metadata(epub_path):
         print(f"Error parsing metadata for {os.path.basename(epub_path)}: {e}")
     return metadata
 
+def extract_cover(epub_path, covers_dir, norm_name):
+    """
+    Extracts the front (and optional back) cover image from an EPUB file.
+    Returns a dict with paths: {"cover_path": "covers/x.jpg", "back_cover_path": "covers/x_back.jpg"} (or None values).
+    """
+    res_paths = {"cover_path": None, "back_cover_path": None}
+    try:
+        from PIL import Image
+        import io
+        
+        front_filename = f"{norm_name}.jpg"
+        front_path = os.path.join(covers_dir, front_filename)
+        
+        back_filename = f"{norm_name}_back.jpg"
+        back_path = os.path.join(covers_dir, back_filename)
+        
+        # Check if front already exists
+        if os.path.exists(front_path):
+            res_paths["cover_path"] = f"covers/{front_filename}"
+        if os.path.exists(back_path):
+            res_paths["back_cover_path"] = f"covers/{back_filename}"
+            
+        # If both already exist, no need to open zip
+        if res_paths["cover_path"] and res_paths["back_cover_path"]:
+            return res_paths
+            
+        with zipfile.ZipFile(epub_path, 'r') as epub:
+            # Read container.xml
+            try:
+                container_content = epub.read('META-INF/container.xml')
+                root = ET.fromstring(container_content)
+                ns = {'ns': 'urn:oasis:names:tc:opendocument:xmlns:container'}
+                rootfile = root.find('.//ns:rootfile', ns)
+                if rootfile is None:
+                    rootfile = root.find('.//rootfile')
+                if rootfile is None:
+                    return res_paths
+                opf_path = rootfile.attrib.get('full-path')
+            except:
+                return res_paths
+                
+            if not opf_path:
+                return res_paths
+                
+            # Read OPF content
+            opf_dir = os.path.dirname(opf_path)
+            opf_content = epub.read(opf_path)
+            opf_root = ET.fromstring(opf_content)
+            
+            ns_opf = {
+                'opf': 'http://www.idpf.org/2007/opf',
+                'dc': 'http://purl.org/dc/elements/1.1/'
+            }
+            
+            # Find cover item ID
+            cover_id = None
+            meta_elem = opf_root.find('.//opf:metadata', ns_opf)
+            if meta_elem is None:
+                meta_elem = opf_root.find('.//metadata')
+            if meta_elem is not None:
+                for meta in meta_elem.findall('.//opf:meta', ns_opf) or meta_elem.findall('.//meta'):
+                    if meta.attrib.get('name') == 'cover':
+                        cover_id = meta.attrib.get('content')
+                        break
+            
+            # Look in manifest
+            manifest = opf_root.find('.//opf:manifest', ns_opf)
+            if manifest is None:
+                manifest = opf_root.find('.//manifest')
+                
+            img_href = None
+            back_img_href = None
+            
+            if manifest is not None:
+                items = manifest.findall('.//opf:item', ns_opf) or manifest.findall('.//item')
+                # Try to find by cover_id first
+                if cover_id:
+                    for item in items:
+                        if item.attrib.get('id') == cover_id:
+                            img_href = item.attrib.get('href')
+                            break
+                # Fallback: find any item that has properties="cover-image" or id/href containing "cover"
+                for item in items:
+                    props = item.attrib.get('properties', '')
+                    item_id = item.attrib.get('id', '')
+                    href = item.attrib.get('href', '')
+                    media_type = item.attrib.get('media-type', '')
+                    
+                    if 'image/' in media_type:
+                        if not img_href and ('cover-image' in props or 'cover' in item_id.lower() or 'cover' in href.lower()):
+                            # Avoid grabbing back cover as front cover
+                            if 'back' not in item_id.lower() and 'back' not in href.lower():
+                                img_href = href
+                        if not back_img_href and ('backcover' in item_id.lower() or 'back-cover' in item_id.lower() or 'back_cover' in item_id.lower() or 'backcover' in href.lower() or 'back-cover' in href.lower() or 'back_cover' in href.lower()):
+                            back_img_href = href
+                            
+            if not img_href:
+                # Last resort fallback for front cover
+                for name in epub.namelist():
+                    if 'cover' in name.lower() and 'back' not in name.lower() and (name.lower().endswith('.jpg') or name.lower().endswith('.jpeg') or name.lower().endswith('.png')):
+                        img_href = name
+                        opf_dir = "" # Path is already absolute within zip
+                        break
+                        
+            if not back_img_href:
+                # Last resort fallback for back cover
+                for name in epub.namelist():
+                    if 'back' in name.lower() and 'cover' in name.lower() and (name.lower().endswith('.jpg') or name.lower().endswith('.jpeg') or name.lower().endswith('.png')):
+                        back_img_href = name
+                        opf_dir = ""
+                        break
+                        
+            # Helper to extract and save a specific image href
+            def extract_and_resize(href, dest):
+                if not href: return False
+                if opf_dir:
+                    zip_img_path = os.path.join(opf_dir, href).replace('\\', '/')
+                else:
+                    zip_img_path = href
+                
+                parts = []
+                for p in zip_img_path.split('/'):
+                    if p == '..':
+                        if parts: parts.pop()
+                    elif p != '.':
+                        parts.append(p)
+                zip_img_path = '/'.join(parts)
+                
+                try:
+                    img_data = epub.read(zip_img_path)
+                except:
+                    try:
+                        img_data = epub.read(href)
+                    except:
+                        return False
+                
+                img = Image.open(io.BytesIO(img_data))
+                if img.mode != 'RGB':
+                    img = img.convert('RGB')
+                
+                max_width = 400
+                if img.width > max_width:
+                    ratio = max_width / float(img.width)
+                    new_height = int(float(img.height) * ratio)
+                    img = img.resize((max_width, new_height), Image.Resampling.LANCZOS)
+                
+                img.save(dest, 'JPEG', quality=85)
+                return True
+
+            if not res_paths["cover_path"] and img_href:
+                if extract_and_resize(img_href, front_path):
+                    res_paths["cover_path"] = f"covers/{front_filename}"
+            if not res_paths["back_cover_path"] and back_img_href:
+                if extract_and_resize(back_img_href, back_path):
+                    res_paths["back_cover_path"] = f"covers/{back_filename}"
+                    
+    except Exception as e:
+        print(f"Error extracting cover for {epub_path}: {e}")
+    return res_paths
+
 def load_books_db():
     if os.path.exists(BOOKS_JSON_PATH):
         try:
@@ -364,6 +524,22 @@ def main():
         entry["is_on_kindle"] = is_on_kindle
         entry["kindle_path"] = kindle_file_path
         
+        # Extract cover if missing (only if not dry_run)
+        covers_dir = os.path.join(REPO_DIR, "covers")
+        if not dry_run:
+            os.makedirs(covers_dir, exist_ok=True)
+            cover_path = entry.get("cover_path")
+            back_cover_path = entry.get("back_cover_path")
+            if not cover_path or not back_cover_path or not os.path.exists(os.path.join(REPO_DIR, cover_path)):
+                covers_info = extract_cover(local_path, covers_dir, norm_name)
+                if covers_info.get("cover_path"):
+                    entry["cover_path"] = covers_info["cover_path"]
+                if covers_info.get("back_cover_path"):
+                    entry["back_cover_path"] = covers_info["back_cover_path"]
+        else:
+            if "cover_path" not in entry:
+                entry["cover_path"] = f"covers/{norm_name}.jpg"
+                
         updated_db[norm_name] = entry
 
     # Handle books only on Kindle (in case we didn't back them up or Kindle disconnected)
@@ -509,7 +685,7 @@ def main():
         if "GITHUB_TOKEN" in env and "dummy" in env["GITHUB_TOKEN"].lower():
             del env["GITHUB_TOKEN"]
             
-        subprocess.run(["git", "add", "README.md", "books.json", "index.html", "recommendations.md", "recommendations.json"], cwd=REPO_DIR, env=env, check=True)
+        subprocess.run(["git", "add", "README.md", "books.json", "index.html", "recommendations.md", "recommendations.json", "covers/"], cwd=REPO_DIR, env=env, check=True)
         # Check if anything to commit
         status = subprocess.run(["git", "status", "--porcelain"], cwd=REPO_DIR, capture_output=True, text=True, check=True)
         if status.stdout.strip():
