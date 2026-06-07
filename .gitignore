@@ -14,3 +14,8 @@ ssh_error.txt
 ssh_output.txt
 test_*.py
 test_*.ps1
+
+# Ignore OneDrive token cache and environment variables
+.onedrive_token_cache.json
+.env
+

@@ -23,26 +23,38 @@ REPO_DIR = os.path.join(ONEDRIVE_EBOOKS_DIR, "ebooks")
 BOOKS_JSON_PATH = os.path.join(REPO_DIR, "books.json")
 README_MD_PATH = os.path.join(REPO_DIR, "README.md")
 
-# AI Keywords for filtering
-AI_KEYWORDS = [
-    r'\bai\b', r'\bais\b', r'artificial intelligence', r'llm', r'gpt', r'generative',
-    r'machine learning', r'deep learning', r'neural', r'prompt engineering',
-    r'agentic', r'openai', r'copilot', r'algorithms', r'chatgpt', r'langchain',
-    r'vibe coding', r'aeo'
+# AI Keywords for primary classification (Title & Subjects)
+AI_KEYWORDS_PRIMARY = [
+    r'\bai\b', r'\bais\b', r'artificial intelligence', r'\bllm\w*', r'\bgpt\w*', r'generative',
+    r'machine learning', r'deep learning', r'neural network', r'neural net', r'prompt engineering',
+    r'agentic', r'openai', r'copilot', r'chatgpt', r'langchain', r'vibe coding', r'aeo', r'\bmlops\b'
 ]
 
 def is_ai_book(book_meta):
     """
     Check if a book is AI-related based on its metadata.
+    Uses title and subjects with a wider range of keywords, and filters descriptions
+    with a highly restrictive subset of terms to eliminate false positives.
     """
-    title = book_meta.get("title", "")
-    subjects = book_meta.get("subjects", [])
-    description = book_meta.get("description", "")
+    title = book_meta.get("title", "").lower()
+    subjects = [s.lower() for s in book_meta.get("subjects", [])]
+    description = book_meta.get("description", "").lower()
     
-    text = (title + " " + " ".join(subjects) + " " + description).lower()
-    for kw in AI_KEYWORDS:
-        if re.search(kw, text):
+    # 1. Search Title and Subjects (Primary match)
+    for kw in AI_KEYWORDS_PRIMARY:
+        if re.search(kw, title) or any(re.search(kw, s) for s in subjects):
             return True
+            
+    # 2. Search Description with highly restrictive keywords (Secondary match)
+    restrictive_desc_keywords = [
+        r'artificial intelligence', r'\bllm\w*', r'\bgpt\w*', r'generative ai',
+        r'machine learning', r'deep learning', r'neural network', r'neural net', r'prompt engineering',
+        r'agentic ai', r'openai', r'\bcopilot\b', r'chatgpt', r'langchain', r'vibe coding', r'\bmlops\b'
+    ]
+    for kw in restrictive_desc_keywords:
+        if re.search(kw, description):
+            return True
+            
     return False
 
 # Create directories if they do not exist
@@ -438,7 +450,7 @@ def main():
     
     md += "## Books List\n\n"
     md += f"Total books cataloged: **{len(sorted_books)}**\n\n"
-    md += "| AI Topic? | Status | Title & Author | Year | Subjects / Genres | Synopsis | Local OneDrive Link |\n"
+    md += "| AI Topic? | Status | Title & Author | Year | Subjects / Genres | Synopsis | Download / Access |\n"
     md += "| :---: | :---: | | :---: | | | :---: |\n"
     
     for book in sorted_books:
@@ -455,17 +467,22 @@ def main():
         title_author = f"**{book['title']}**<br>_by {book['author']}_"
         subjects = ", ".join(book["subjects"]) if book["subjects"] else "_"
         
-        # Clickable local file link if onedrive path exists
-        local_link = "_"
+        # Clickable access links (local file link and/or public cloud download link)
+        access_links = []
         if book["onedrive_path"]:
             # URL encode path segments for markdown link
             from urllib.parse import quote
             rel_path = book["onedrive_path"]
             abs_path = os.path.abspath(os.path.join(ONEDRIVE_EBOOKS_DIR, rel_path))
             file_url = f"file:///{abs_path.replace('\\', '/')}"
-            local_link = f"[Open File]({file_url})"
+            access_links.append(f"[Local File]({file_url})")
             
-        md += f"| {ai_icon} | {status_icon} | {title_author} | {book['year']} | {subjects} | {synopsis} | {local_link} |\n"
+        if book.get("onedrive_download_link"):
+            access_links.append(f"[Cloud Download]({book['onedrive_download_link']})")
+            
+        links_str = " / ".join(access_links) if access_links else "_"
+        
+        md += f"| {ai_icon} | {status_icon} | {title_author} | {book['year']} | {subjects} | {synopsis} | {links_str} |\n"
 
     if not dry_run:
         with open(README_MD_PATH, 'w', encoding='utf-8') as f:
