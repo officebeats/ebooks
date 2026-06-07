@@ -1192,6 +1192,35 @@
 </div>
 
 <script>
+    // Helper to format subjects into succinct, clean tags
+    function cleanSubject(s) {
+        if (!s) return "";
+        let parts = s.split(/[\/\\]/);
+        let tag = parts[parts.length - 1].trim();
+        if (tag.toLowerCase() === "general" && parts.length > 1) {
+            tag = parts[parts.length - 2].trim();
+        }
+        if (tag.includes("&")) {
+            tag = tag.split("&")[0].trim();
+        }
+        if (tag.includes(" / ")) {
+            tag = tag.split(" / ")[0].trim();
+        }
+        // Remove text in parentheses if too long
+        tag = tag.replace(/\s*\([^)]*\)\s*/g, "").trim();
+        
+        // Title case
+        tag = tag.split(' ')
+                 .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+                 .join(' ');
+                 
+        // Truncate to keep chips succinct
+        if (tag.length > 15) {
+            tag = tag.substring(0, 12) + "...";
+        }
+        return tag;
+    }
+
     // State Databases
     let libraryData = {};
     let recommendationsData = [];
@@ -1338,13 +1367,13 @@
             
             // AI classification badge
             const aiIconHtml = b.is_ai 
-                ? `<span class="badge ai" style="font-size: 0.7rem; padding: 0.15rem 0.4rem;">AI 🤖</span>`
-                : `<span class="badge non-ai" style="font-size: 0.7rem; padding: 0.15rem 0.4rem;">Tech 💻</span>`;
+                ? `<span class="badge ai" style="font-size: 0.7rem; padding: 0.15rem 0.4rem;">AI</span>`
+                : `<span class="badge non-ai" style="font-size: 0.7rem; padding: 0.15rem 0.4rem;">Tech</span>`;
                 
             // Location Badge
             const deviceBadgeHtml = `
                 <span class="badge ${b.is_on_kindle ? 'kindle' : 'onedrive'}">
-                    ${b.is_on_kindle ? 'Kindle 📱' : 'OneDrive 💾'}
+                    ${b.is_on_kindle ? 'Kindle' : 'OneDrive'}
                 </span>
             `;
             
@@ -1352,7 +1381,7 @@
             const subjectsHtml = `<div class="subject-tags">
                 ${aiIconHtml}
                 ${b.subjects && b.subjects.length > 0
-                    ? b.subjects.slice(0, 3).map(s => `<span class="tag" style="font-size: 0.7rem; padding: 0.15rem 0.4rem;">${s}</span>`).join('')
+                    ? b.subjects.slice(0, 3).map(s => `<span class="tag" style="font-size: 0.7rem; padding: 0.15rem 0.4rem;">${cleanSubject(s)}</span>`).join('')
                     : ''}
                 ${b.subjects && b.subjects.length > 3
                     ? `<span class="tag" style="font-size: 0.7rem; padding: 0.15rem 0.4rem; color: var(--text-muted);">+${b.subjects.length - 3}</span>`
@@ -1472,9 +1501,9 @@
             `;
             
             // Genres pills (limit to 3)
-            const subjectsHtml = r.subjects && r.subjects.length > 0
-                ? `<div class="subject-tags">
-                     ${r.subjects.slice(0, 3).map(s => `<span class="tag" style="font-size: 0.7rem; padding: 0.15rem 0.4rem; border-radius: 4px;">${s}</span>`).join('')}
+             const subjectsHtml = r.subjects && r.subjects.length > 0
+                 ? `<div class="subject-tags">
+                      ${r.subjects.slice(0, 3).map(s => `<span class="tag" style="font-size: 0.7rem; padding: 0.15rem 0.4rem; border-radius: 4px;">${cleanSubject(s)}</span>`).join('')}
                      ${r.subjects.length > 3 ? `<span class="tag" style="font-size: 0.7rem; padding: 0.15rem 0.4rem; color: var(--text-muted);">+${r.subjects.length - 3}</span>` : ''}
                    </div>`
                 : `<span style="color: var(--text-muted);">_</span>`;
@@ -1533,9 +1562,9 @@
         // Badges
         const badges = document.getElementById("modal-badges");
         badges.innerHTML = `
-            ${book.is_ai ? '<span class="badge ai">AI Topic 🤖</span>' : ''}
+            ${book.is_ai ? '<span class="badge ai">AI Topic</span>' : ''}
             <span class="badge ${book.is_on_kindle ? 'kindle' : 'onedrive'}">
-                ${book.is_on_kindle ? 'On Kindle 📱' : 'OneDrive Only 💾'}
+                ${book.is_on_kindle ? 'On Kindle' : 'OneDrive Only'}
             </span>
         `;
         
@@ -1575,7 +1604,7 @@
         const tagsDiv = document.getElementById("modal-subjects");
         const subjectsSection = document.getElementById("modal-subjects-section");
         if (book.subjects && book.subjects.length > 0) {
-            tagsDiv.innerHTML = book.subjects.map(s => `<span class="tag">${s}</span>`).join('');
+            tagsDiv.innerHTML = book.subjects.map(s => `<span class="tag">${cleanSubject(s)}</span>`).join('');
             subjectsSection.style.display = "block";
         } else {
             subjectsSection.style.display = "none";
