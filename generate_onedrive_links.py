@@ -8,8 +8,8 @@ import time
 import requests
 import msal
 
-# Default Client ID (Azure CLI public client registration)
-DEFAULT_CLIENT_ID = "04b07795-8ddb-461a-bbee-02f9e1bf7b46"
+# Default Client ID (Microsoft Graph CLI public client registration)
+DEFAULT_CLIENT_ID = "14d82eec-204b-4c2f-b7e8-296a70dab67e"
 SCOPES = ["Files.ReadWrite", "User.Read"]
 
 # Paths
