@@ -675,51 +675,12 @@
             display: inline-block;
         }
 
-        .path-display {
-            background: rgba(0, 0, 0, 0.2);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 0.75rem 1rem;
-            font-family: 'Fira Code', monospace;
-            font-size: 0.85rem;
-            color: var(--text-secondary);
-            word-break: break-all;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 1rem;
-        }
-
         .modal-actions {
             display: flex;
             gap: 1rem;
             margin-top: 2rem;
             border-top: 1px solid var(--border-color);
             padding-top: 1.5rem;
-        }
-
-        /* Toast Notifications */
-        .toast {
-            position: fixed;
-            bottom: 2rem;
-            right: 2rem;
-            background: rgba(16, 185, 129, 0.9);
-            color: white;
-            padding: 0.75rem 1.5rem;
-            border-radius: 8px;
-            font-size: 0.9rem;
-            font-weight: 500;
-            display: none;
-            align-items: center;
-            gap: 0.5rem;
-            box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3);
-            z-index: 2000;
-            animation: slideIn 0.3s ease;
-        }
-
-        @keyframes slideIn {
-            from { transform: translateY(20px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
         }
 
         /* Responsive adjustments */
@@ -951,11 +912,10 @@
             <table id="library-table">
                 <thead>
                     <tr>
-                        <th style="width: 100px; text-align: center;">Topic</th>
                         <th style="width: 150px; text-align: center;">Status</th>
                         <th>Title & Author</th>
                         <th style="width: 100px; text-align: center;">Year</th>
-                        <th>Subjects & Genres</th>
+                        <th>Subjects & Topics</th>
                         <th style="width: 220px; text-align: right; padding-right: 1.5rem;">Actions</th>
                     </tr>
                 </thead>
@@ -1005,7 +965,7 @@
                         <th style="width: 180px; text-align: center;">Tally Checklist</th>
                         <th>Title & Author</th>
                         <th style="width: 100px; text-align: center;">Year</th>
-                        <th>Subjects & Genres</th>
+                        <th>Subjects & Topics</th>
                         <th style="width: 160px; text-align: right; padding-right: 1.5rem;">Actions</th>
                     </tr>
                 </thead>
@@ -1057,17 +1017,6 @@
                     <div class="modal-section-title" style="font-size: 0.8rem; margin-bottom: 0.25rem;">Subjects & Genres</div>
                     <div class="subject-tags" id="modal-subjects"></div>
                 </div>
-        
-                <div class="modal-section" id="modal-path-section" style="margin-bottom: 0;">
-                    <div class="modal-section-title" style="font-size: 0.8rem; margin-bottom: 0.25rem;">Local OneDrive Path</div>
-                    <div class="path-display" style="padding: 0.5rem 0.75rem; font-size: 0.8rem;">
-                        <span id="modal-path-text">-</span>
-                        <button class="btn" onclick="copyLocalPath()" style="padding: 0.25rem 0.5rem; font-size: 0.7rem;">
-                            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m-2 4H10m0 0l3-3m-3 3l3 3"/></svg>
-                            Copy
-                        </button>
-                    </div>
-                </div>
             </div>
         </div>
 
@@ -1075,12 +1024,6 @@
             <!-- Populated via script -->
         </div>
     </div>
-</div>
-
-<!-- Toast notification -->
-<div id="toast" class="toast">
-    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>
-    <span id="toast-message">Copied to clipboard!</span>
 </div>
 
 <script>
@@ -1221,10 +1164,10 @@
                 tr.className = "ai-row";
             }
             
-            // AI Column Icon
+            // AI classification badge
             const aiIconHtml = b.is_ai 
-                ? `<span class="badge ai">🤖 AI</span>`
-                : `<span class="badge non-ai">❌ Tech</span>`;
+                ? `<span class="badge ai" style="font-size: 0.7rem; padding: 0.15rem 0.4rem;">🤖 AI</span>`
+                : `<span class="badge non-ai" style="font-size: 0.7rem; padding: 0.15rem 0.4rem;">❌ Tech</span>`;
                 
             // Location Badge
             const deviceBadgeHtml = `
@@ -1233,13 +1176,16 @@
                 </span>
             `;
             
-            // Subjects Tag Pills (limit to 3 for compactness)
-            const subjectsHtml = b.subjects && b.subjects.length > 0
-                ? `<div class="subject-tags">
-                     ${b.subjects.slice(0, 3).map(s => `<span class="tag" style="font-size: 0.7rem; padding: 0.15rem 0.4rem;">${s}</span>`).join('')}
-                     ${b.subjects.length > 3 ? `<span class="tag" style="font-size: 0.7rem; padding: 0.15rem 0.4rem; color: var(--text-muted);">+${b.subjects.length - 3}</span>` : ''}
-                   </div>`
-                : `<span style="color: var(--text-muted);">_</span>`;
+            // Subjects & Topics Tag Pills (limit to 3 for compactness)
+            const subjectsHtml = `<div class="subject-tags">
+                ${aiIconHtml}
+                ${b.subjects && b.subjects.length > 0
+                    ? b.subjects.slice(0, 3).map(s => `<span class="tag" style="font-size: 0.7rem; padding: 0.15rem 0.4rem;">${s}</span>`).join('')
+                    : ''}
+                ${b.subjects && b.subjects.length > 3
+                    ? `<span class="tag" style="font-size: 0.7rem; padding: 0.15rem 0.4rem; color: var(--text-muted);">+${b.subjects.length - 3}</span>`
+                    : ''}
+            </div>`;
             
             // Cover Image Thumbnail or fallback
             let coverHtml = "";
@@ -1259,7 +1205,6 @@
             }
 
             tr.innerHTML = `
-                <td style="text-align: center;">${aiIconHtml}</td>
                 <td style="text-align: center;">${deviceBadgeHtml}</td>
                 <td class="title-td">
                     <div style="display: flex; align-items: center; gap: 0.6rem;">
@@ -1278,17 +1223,11 @@
                             <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                             Info
                         </button>
-                        ${b.onedrive_download_link ? `
-                            <a href="${b.onedrive_download_link}" class="btn" target="_blank" style="text-decoration: none;">
+                        ${b.onedrive_share_link ? `
+                            <a href="${b.onedrive_share_link}" class="btn" target="_blank" style="text-decoration: none;">
                                 <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                                 Download
                             </a>
-                        ` : ''}
-                        ${b.onedrive_path ? `
-                            <button class="btn" onclick="copyPathToClipboard('${escapeHtml(b.onedrive_path)}')">
-                                <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m-2 4H10m0 0l3-3m-3 3l3 3"/></svg>
-                                Copy Path
-                            </button>
                         ` : ''}
                     </div>
                 </td>
@@ -1406,43 +1345,7 @@
         updateStats();
     }
 
-    // Copy local OneDrive path to clipboard
-    let activePathToCopy = "";
-    function copyPathToClipboard(relPath) {
-        event.stopPropagation();
-        const baseOneDrive = "C:\\Users\\admin-beats\\OneDrive\\03_Personal_Archive\\eBooks";
-        const fullPath = `${baseOneDrive}\\${relPath.replace(/\//g, '\\')}`;
-        
-        navigator.clipboard.writeText(fullPath).then(() => {
-            showToast(`Path copied: ${fullPath.substring(fullPath.lastIndexOf('\\') + 1)}`);
-        }).catch(err => {
-            console.error("Could not copy:", err);
-            showToast("Failed to copy path.", true);
-        });
-    }
 
-    function copyLocalPath() {
-        if (activePathToCopy) {
-            navigator.clipboard.writeText(activePathToCopy).then(() => {
-                showToast("Full local path copied to clipboard!");
-            });
-        }
-    }
-
-    // Toast utility
-    function showToast(message, isError = false) {
-        const toast = document.getElementById("toast");
-        const msg = document.getElementById("toast-message");
-        
-        msg.innerText = message;
-        toast.style.background = isError ? "rgba(239, 68, 68, 0.9)" : "rgba(16, 185, 129, 0.9)";
-        toast.style.boxShadow = isError ? "0 10px 25px rgba(239, 68, 68, 0.3)" : "0 10px 25px rgba(16, 185, 129, 0.3)";
-        toast.style.display = "flex";
-        
-        setTimeout(() => {
-            toast.style.display = "none";
-        }, 3000);
-    }
 
     // Open Modal
     function openBookModal(title) {
@@ -1506,14 +1409,13 @@
             subjectsSection.style.display = "none";
         }
         
-        // Paths & Actions
-        const pathSection = document.getElementById("modal-path-section");
+        // Actions
         const modalActions = document.getElementById("modal-actions");
         modalActions.innerHTML = "";
         
-        if (book.onedrive_download_link) {
+        if (book.onedrive_share_link) {
             modalActions.innerHTML += `
-                <a href="${book.onedrive_download_link}" class="btn btn-primary" target="_blank" style="text-decoration: none;">
+                <a href="${book.onedrive_share_link}" class="btn btn-primary" target="_blank" style="text-decoration: none;">
                     <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                     Download Book
                 </a>
@@ -1522,12 +1424,6 @@
         
         if (book.onedrive_path) {
             const baseOneDrive = "C:\\Users\\admin-beats\\OneDrive\\03_Personal_Archive\\eBooks";
-            const fullLocalPath = `${baseOneDrive}\\${book.onedrive_path.replace(/\//g, '\\')}`;
-            
-            document.getElementById("modal-path-text").innerText = fullLocalPath;
-            activePathToCopy = fullLocalPath;
-            pathSection.style.display = "block";
-            
             // Add Open Local Link action (if browser permits, e.g. run locally)
             const fileUrl = `file:///${baseOneDrive.replace(/\\/g, '/')}/${book.onedrive_path}`;
             modalActions.innerHTML += `
@@ -1536,15 +1432,12 @@
                     Open File Locally
                 </a>
             `;
-        } else {
-            pathSection.style.display = "none";
-            activePathToCopy = "";
         }
         
         // Add OneDrive folder browsing action
         const onedriveSharedLink = document.getElementById("onedrive-shared-btn").getAttribute("href");
         modalActions.innerHTML += `
-            <a href="${onedriveSharedLink}" class="btn ${book.onedrive_download_link ? '' : 'btn-primary'}" target="_blank" style="text-decoration: none;">
+            <a href="${onedriveSharedLink}" class="btn ${book.onedrive_share_link ? '' : 'btn-primary'}" target="_blank" style="text-decoration: none;">
                 <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4 4 0 003 15z"/></svg>
                 Browse Shared Folder
             </a>
