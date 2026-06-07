@@ -69,40 +69,57 @@
         .container {
             max-width: 1400px;
             margin: 0 auto;
-            padding: 2rem 1.5rem;
+            padding: 0.75rem 1.25rem;
         }
 
         /* Header Styles */
         header {
-            text-align: center;
-            margin-bottom: 3rem;
-            position: relative;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.75rem;
+        }
+
+        .header-left {
+            display: flex;
+            flex-direction: column;
         }
 
         h1 {
-            font-size: 3rem;
+            font-size: 1.8rem;
             font-weight: 700;
             background: linear-gradient(135deg, #f3f4f6 0%, #a855f7 50%, #3b82f6 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            margin-bottom: 0.5rem;
-            letter-spacing: -0.05em;
+            margin-bottom: 0.1rem;
+            letter-spacing: -0.04em;
         }
 
         .subtitle {
             color: var(--text-secondary);
-            font-size: 1.1rem;
+            font-size: 0.85rem;
             font-weight: 300;
-            margin-bottom: 1.5rem;
+            margin-bottom: 0;
+        }
+
+        .header-right {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 0.4rem;
         }
 
         /* Stats Bar */
         .stats-bar {
             display: flex;
-            justify-content: center;
-            gap: 1.5rem;
+            justify-content: flex-end;
+            gap: 0.6rem;
             flex-wrap: wrap;
-            margin-bottom: 2rem;
+            margin-bottom: 0;
         }
 
         .stat-item {
@@ -110,13 +127,13 @@
             backdrop-filter: var(--glass-blur);
             border: 1px solid var(--border-color);
             border-radius: 50px;
-            padding: 0.5rem 1.5rem;
-            font-size: 0.9rem;
+            padding: 0.25rem 0.75rem;
+            font-size: 0.78rem;
             color: var(--text-secondary);
             display: flex;
             align-items: center;
-            gap: 0.5rem;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            gap: 0.3rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
         .stat-val {
@@ -130,10 +147,10 @@
 
         /* Quick Links */
         .quick-links {
-            margin-bottom: 2.5rem;
+            margin-bottom: 0;
             display: flex;
-            justify-content: center;
-            gap: 1rem;
+            justify-content: flex-end;
+            gap: 0.5rem;
         }
 
         .btn-link {
@@ -141,13 +158,13 @@
             border: 1px solid rgba(168, 85, 247, 0.2);
             color: #d8b4fe;
             text-decoration: none;
-            padding: 0.6rem 1.2rem;
-            border-radius: 8px;
-            font-size: 0.9rem;
+            padding: 0.35rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.78rem;
             font-weight: 500;
             display: inline-flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 0.4rem;
             transition: all 0.3s ease;
             backdrop-filter: var(--glass-blur);
         }
@@ -156,26 +173,28 @@
             background: rgba(168, 85, 247, 0.2);
             border-color: var(--primary-accent);
             box-shadow: var(--glow-purple);
-            transform: translateY(-2px);
+            transform: translateY(-1px);
         }
 
         /* Navigation Tabs */
         .tabs {
             display: flex;
-            justify-content: center;
-            gap: 1rem;
-            margin-bottom: 2.5rem;
+            justify-content: flex-start;
+            gap: 1.5rem;
+            margin-top: 0.25rem;
+            margin-bottom: 0.5rem;
             border-bottom: 1px solid var(--border-color);
-            padding-bottom: 1rem;
+            padding-bottom: 0.4rem;
+            width: 100%;
         }
 
         .tab-btn {
             background: transparent;
             border: none;
             color: var(--text-secondary);
-            font-size: 1.2rem;
+            font-size: 0.95rem;
             font-weight: 600;
-            padding: 0.6rem 1.5rem;
+            padding: 0.3rem 0.5rem;
             cursor: pointer;
             position: relative;
             transition: color 0.3s ease;
@@ -193,12 +212,12 @@
         .tab-btn.active::after {
             content: '';
             position: absolute;
-            bottom: -1rem;
+            bottom: -0.45rem;
             left: 0;
             width: 100%;
             height: 2px;
             background: linear-gradient(90deg, var(--primary-accent), var(--secondary-accent));
-            box-shadow: 0 0 10px var(--primary-accent);
+            box-shadow: 0 0 8px var(--primary-accent);
         }
 
         /* View Panels */
@@ -221,25 +240,25 @@
             background: var(--card-bg);
             backdrop-filter: var(--glass-blur);
             border: 1px solid var(--border-color);
-            border-radius: 16px;
-            padding: 1.5rem;
-            margin-bottom: 2rem;
+            border-radius: 10px;
+            padding: 0.6rem 1rem;
+            margin-bottom: 0.75rem;
             display: grid;
             grid-template-columns: 2fr 1fr 1fr 1fr;
-            gap: 1rem;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            gap: 0.75rem;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
         }
 
         .control-group {
             display: flex;
             flex-direction: column;
-            gap: 0.5rem;
+            gap: 0.25rem;
         }
 
         .control-group label {
-            font-size: 0.8rem;
+            font-size: 0.7rem;
             text-transform: uppercase;
-            letter-spacing: 0.05em;
+            letter-spacing: 0.03em;
             color: var(--text-secondary);
             font-weight: 500;
         }
@@ -252,51 +271,53 @@
             width: 100%;
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 0.75rem 1rem 0.75rem 2.5rem;
+            border-radius: 6px;
+            padding: 0.45rem 0.75rem 0.45rem 2rem;
             color: var(--text-primary);
             font-family: 'Outfit', sans-serif;
-            font-size: 0.95rem;
+            font-size: 0.85rem;
             outline: none;
             transition: all 0.3s ease;
         }
 
         .search-input:focus {
             border-color: var(--primary-accent);
-            box-shadow: 0 0 8px rgba(168, 85, 247, 0.2);
+            box-shadow: 0 0 6px rgba(168, 85, 247, 0.2);
             background: rgba(255, 255, 255, 0.08);
         }
 
         .search-icon {
             position: absolute;
-            left: 0.8rem;
+            left: 0.6rem;
             top: 50%;
             transform: translateY(-50%);
             color: var(--text-secondary);
             pointer-events: none;
+            width: 14px;
+            height: 14px;
         }
 
         .select-input {
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 0.75rem 1rem;
+            border-radius: 6px;
+            padding: 0.45rem 1.75rem 0.45rem 0.75rem;
             color: var(--text-primary);
             font-family: 'Outfit', sans-serif;
-            font-size: 0.95rem;
+            font-size: 0.85rem;
             outline: none;
             cursor: pointer;
             transition: all 0.3s ease;
             appearance: none;
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239ca3af'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
             background-repeat: no-repeat;
-            background-position: right 0.75rem center;
-            background-size: 1.25rem;
+            background-position: right 0.5rem center;
+            background-size: 1rem;
         }
 
         .select-input:focus {
             border-color: var(--secondary-accent);
-            box-shadow: 0 0 8px rgba(59, 130, 246, 0.2);
+            box-shadow: 0 0 6px rgba(59, 130, 246, 0.2);
         }
 
         /* Table Layout (Modern & Compact) */
@@ -306,9 +327,9 @@
             background: var(--card-bg);
             backdrop-filter: var(--glass-blur);
             border: 1px solid var(--border-color);
-            border-radius: 16px;
+            border-radius: 12px;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-            margin-top: 1rem;
+            margin-top: 0.5rem;
         }
 
         table {
@@ -318,9 +339,9 @@
         }
 
         th, td {
-            padding: 0.6rem 1rem;
+            padding: 0.2rem 0.4rem;
             border-bottom: 1px solid var(--border-color);
-            font-size: 0.9rem;
+            font-size: 0.78rem;
             vertical-align: middle;
         }
 
@@ -329,8 +350,9 @@
             color: var(--text-secondary);
             font-weight: 600;
             text-transform: uppercase;
-            font-size: 0.75rem;
+            font-size: 0.62rem;
             letter-spacing: 0.05em;
+            padding: 0.25rem 0.4rem;
         }
 
         tr {
@@ -343,6 +365,32 @@
 
         tr:last-child td {
             border-bottom: none;
+        }
+
+        .cover-pair {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        @media (max-width: 768px) {
+            header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.75rem;
+            }
+            .header-right {
+                align-items: flex-start;
+                width: 100%;
+            }
+            .stats-bar {
+                justify-content: flex-start;
+            }
+            .quick-links {
+                justify-content: flex-start;
+                width: 100%;
+            }
         }
 
         /* Highlights for AI Books in tables */
@@ -393,13 +441,14 @@
         .book-title-cell {
             color: var(--text-primary);
             font-weight: 600;
-            font-size: 0.95rem;
+            font-size: 0.82rem;
+            line-height: 1.25;
         }
 
         .book-author-cell {
             color: var(--text-secondary);
-            font-size: 0.85rem;
-            margin-top: 0.1rem;
+            font-size: 0.72rem;
+            margin-top: 0.02rem;
         }
 
         .table-actions {
@@ -694,45 +743,159 @@
                 flex-direction: column;
             }
         }
+
+        /* Compact elements inside table cells */
+        .badge {
+            font-size: 0.62rem;
+            padding: 0.1rem 0.35rem;
+            gap: 0.15rem;
+        }
+        .tag {
+            font-size: 0.62rem;
+            padding: 0.1rem 0.3rem;
+        }
+        .table-actions .btn {
+            font-size: 0.72rem;
+            padding: 0.22rem 0.45rem;
+            border-radius: 4px;
+            gap: 0.2rem;
+        }
+        .table-actions .btn svg {
+            width: 10px;
+            height: 10px;
+        }
+
+        /* Book covers styles */
+        .book-cover-thumb {
+            width: 28px;
+            height: 40px;
+            object-fit: cover;
+            border-radius: 3px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            transition: transform 0.2s ease;
+            cursor: pointer;
+            display: block;
+            flex-shrink: 0;
+        }
+        .book-cover-thumb:hover {
+            transform: scale(1.3);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+            z-index: 10;
+        }
+        .book-cover-fallback {
+            width: 28px;
+            height: 40px;
+            border-radius: 3px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.55rem;
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+        .book-cover-fallback:hover {
+            transform: scale(1.1);
+        }
+
+        /* 3D Cover Flip and Modal Layout */
+        .modal-body {
+            display: flex;
+            gap: 1.5rem;
+            margin-top: 1rem;
+        }
+        .cover-flip-container {
+            perspective: 1000px;
+            width: 150px;
+            height: 215px;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+        .cover-flip-card {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .cover-flip-container.flipped .cover-flip-card {
+            transform: rotateY(180deg);
+        }
+        .cover-front, .cover-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+        }
+        .cover-front img, .cover-back img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 7px;
+        }
+        .cover-back {
+            transform: rotateY(180deg);
+        }
+        .flip-hint {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            text-align: center;
+            margin-top: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.25rem;
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
     <header>
-        <h1>eBooks Vault</h1>
-        <div class="subtitle">Personal archive index & catalog reference portal</div>
-        
-        <!-- Stats -->
-        <div class="stats-bar">
-            <div class="stat-item">
-                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
-                Total eBooks: <span class="stat-val" id="stat-total">-</span>
-            </div>
-            <div class="stat-item">
-                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-                AI Library: <span class="stat-val purple" id="stat-ai">-</span>
-            </div>
-            <div class="stat-item">
-                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
-                On Kindle: <span class="stat-val green" id="stat-kindle">-</span>
-            </div>
-            <div class="stat-item">
-                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9.663 17h4.673M12 3v1m6.364.364l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
-                Recommendations: <span class="stat-val blue" id="stat-recs">-</span>
-            </div>
+        <div class="header-left">
+            <h1>eBooks Vault</h1>
+            <div class="subtitle">Personal archive index & catalog reference portal</div>
         </div>
+        
+        <div class="header-right">
+            <!-- Stats -->
+            <div class="stats-bar">
+                <div class="stat-item">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+                    Total: <span class="stat-val" id="stat-total">-</span>
+                </div>
+                <div class="stat-item">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                    AI: <span class="stat-val purple" id="stat-ai">-</span>
+                </div>
+                <div class="stat-item">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                    Kindle: <span class="stat-val green" id="stat-kindle">-</span>
+                </div>
+                <div class="stat-item">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9.663 17h4.673M12 3v1m6.364.364l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                    Recs: <span class="stat-val blue" id="stat-recs">-</span>
+                </div>
+            </div>
 
-        <!-- Links -->
-        <div class="quick-links">
-            <a href="[Insert OneDrive Shared Link Here]" id="onedrive-shared-btn" class="btn-link" target="_blank">
-                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4 4 0 003 15z"/></svg>
-                Browse OneDrive Shared Library
-            </a>
-            <a href="https://openlibrary.org" class="btn-link" target="_blank" style="background: rgba(59, 130, 246, 0.1); border-color: rgba(59, 130, 246, 0.2); color: #93c5fd;">
-                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                Open Library Database
-            </a>
+            <!-- Links -->
+            <div class="quick-links">
+                <a href="[Insert OneDrive Shared Link Here]" id="onedrive-shared-btn" class="btn-link" target="_blank">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4 4 0 003 15z"/></svg>
+                    Browse OneDrive
+                </a>
+                <a href="https://openlibrary.org" class="btn-link" target="_blank" style="background: rgba(59, 130, 246, 0.1); border-color: rgba(59, 130, 246, 0.2); color: #93c5fd;">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    Open Library
+                </a>
+            </div>
         </div>
 
         <!-- Navigation Tabs -->
@@ -860,35 +1023,55 @@
         <button class="modal-close" onclick="closeModal()">
             <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg>
         </button>
-        <div class="modal-header">
-            <div class="modal-badges" id="modal-badges"></div>
-            <h2 class="modal-title" id="modal-title">-</h2>
-            <div class="modal-author" id="modal-author">-</div>
-            <div class="modal-year" id="modal-year">-</div>
-        </div>
+        <div class="modal-body">
+            <div id="modal-cover-container" style="display: none; flex-direction: column; align-items: center;">
+                <div class="cover-flip-container" id="cover-flip-box" onclick="toggleCoverFlip()">
+                    <div class="cover-flip-card">
+                        <div class="cover-front">
+                            <img id="modal-cover-img" src="" alt="Front Cover" />
+                        </div>
+                        <div class="cover-back">
+                            <img id="modal-cover-back-img" src="" alt="Back Cover" />
+                        </div>
+                    </div>
+                </div>
+                <div class="flip-hint" id="cover-flip-hint">
+                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 6.2M20 3v4h-4"/></svg>
+                    Click cover to flip 🔄
+                </div>
+            </div>
+            <div style="flex: 1; min-width: 250px;">
+                <div class="modal-header" style="margin-top: 0; padding-bottom: 0.75rem; margin-bottom: 1rem;">
+                    <div class="modal-badges" id="modal-badges"></div>
+                    <h2 class="modal-title" id="modal-title">-</h2>
+                    <div class="modal-author" id="modal-author">-</div>
+                    <div class="modal-year" id="modal-year">-</div>
+                </div>
+                
+                <div class="modal-section" style="margin-bottom: 1rem;">
+                    <div class="modal-section-title" style="font-size: 0.8rem; margin-bottom: 0.25rem;">Synopsis / Description</div>
+                    <div class="modal-description" id="modal-description" style="font-size: 0.88rem; line-height: 1.5;">-</div>
+                </div>
         
-        <div class="modal-section">
-            <div class="modal-section-title">Synopsis / Description</div>
-            <div class="modal-description" id="modal-description">-</div>
-        </div>
-
-        <div class="modal-section" id="modal-subjects-section">
-            <div class="modal-section-title">Subjects & Genres</div>
-            <div class="subject-tags" id="modal-subjects"></div>
-        </div>
-
-        <div class="modal-section" id="modal-path-section">
-            <div class="modal-section-title">Local OneDrive Path</div>
-            <div class="path-display">
-                <span id="modal-path-text">-</span>
-                <button class="btn" onclick="copyLocalPath()" style="padding: 0.35rem 0.6rem; font-size: 0.75rem;">
-                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m-2 4H10m0 0l3-3m-3 3l3 3"/></svg>
-                    Copy
-                </button>
+                <div class="modal-section" id="modal-subjects-section" style="margin-bottom: 1rem;">
+                    <div class="modal-section-title" style="font-size: 0.8rem; margin-bottom: 0.25rem;">Subjects & Genres</div>
+                    <div class="subject-tags" id="modal-subjects"></div>
+                </div>
+        
+                <div class="modal-section" id="modal-path-section" style="margin-bottom: 0;">
+                    <div class="modal-section-title" style="font-size: 0.8rem; margin-bottom: 0.25rem;">Local OneDrive Path</div>
+                    <div class="path-display" style="padding: 0.5rem 0.75rem; font-size: 0.8rem;">
+                        <span id="modal-path-text">-</span>
+                        <button class="btn" onclick="copyLocalPath()" style="padding: 0.25rem 0.5rem; font-size: 0.7rem;">
+                            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m-2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+                            Copy
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div class="modal-actions" id="modal-actions">
+        <div class="modal-actions" id="modal-actions" style="margin-top: 1.5rem; padding-top: 1rem;">
             <!-- Populated via script -->
         </div>
     </div>
@@ -1058,12 +1241,34 @@
                    </div>`
                 : `<span style="color: var(--text-muted);">_</span>`;
             
+            // Cover Image Thumbnail or fallback
+            let coverHtml = "";
+            if (b.cover_path) {
+                if (b.back_cover_path) {
+                    coverHtml = `
+                        <div class="cover-pair">
+                            <img src="${b.cover_path}" class="book-cover-thumb" alt="Front Cover" onclick="openBookModal('${escapeHtml(b.title)}')" title="Front Cover" />
+                            <img src="${b.back_cover_path}" class="book-cover-thumb" alt="Back Cover" onclick="openBookModal('${escapeHtml(b.title)}')" title="Back Cover" />
+                        </div>
+                    `;
+                } else {
+                    coverHtml = `<img src="${b.cover_path}" class="book-cover-thumb" alt="Front Cover" onclick="openBookModal('${escapeHtml(b.title)}')" title="Front Cover" />`;
+                }
+            } else {
+                coverHtml = `<div class="book-cover-fallback" style="background: linear-gradient(135deg, var(--primary-accent) 0%, var(--secondary-accent) 100%);" onclick="openBookModal('${escapeHtml(b.title)}')">${escapeHtml(b.title.substring(0, 2).toUpperCase())}</div>`;
+            }
+
             tr.innerHTML = `
                 <td style="text-align: center;">${aiIconHtml}</td>
                 <td style="text-align: center;">${deviceBadgeHtml}</td>
                 <td class="title-td">
-                    <div class="book-title-cell">${escapeHtml(b.title)}</div>
-                    <div class="book-author-cell">by ${escapeHtml(b.author)}</div>
+                    <div style="display: flex; align-items: center; gap: 0.6rem;">
+                        ${coverHtml}
+                        <div>
+                            <div class="book-title-cell">${escapeHtml(b.title)}</div>
+                            <div class="book-author-cell">by ${escapeHtml(b.author)}</div>
+                        </div>
+                    </div>
                 </td>
                 <td style="text-align: center; font-weight: 500;">${b.year}</td>
                 <td>${subjectsHtml}</td>
@@ -1259,6 +1464,38 @@
             </span>
         `;
         
+        // Handle cover images (Front and Back cover flip setup)
+        const coverContainer = document.getElementById("modal-cover-container");
+        const coverImg = document.getElementById("modal-cover-img");
+        const coverBackImg = document.getElementById("modal-cover-back-img");
+        const flipHint = document.getElementById("cover-flip-hint");
+        const flipBox = document.getElementById("cover-flip-box");
+        
+        if (flipBox) {
+            flipBox.classList.remove("flipped");
+        }
+        
+        if (book.cover_path) {
+            coverImg.src = book.cover_path;
+            coverContainer.style.display = "flex";
+            
+            if (book.back_cover_path) {
+                coverBackImg.src = book.back_cover_path;
+                coverBackImg.style.display = "block";
+                flipHint.style.display = "flex";
+                flipBox.style.pointerEvents = "auto";
+            } else {
+                coverBackImg.src = "";
+                coverBackImg.style.display = "none";
+                flipHint.style.display = "none";
+                flipBox.style.pointerEvents = "none";
+            }
+        } else {
+            coverImg.src = "";
+            coverBackImg.src = "";
+            coverContainer.style.display = "none";
+        }
+        
         // Subjects
         const tagsDiv = document.getElementById("modal-subjects");
         const subjectsSection = document.getElementById("modal-subjects-section");
@@ -1319,6 +1556,14 @@
     // Close Modal
     function closeModal(event) {
         document.getElementById("details-modal").style.display = "none";
+    }
+
+    // Toggle 3D Cover Flip
+    function toggleCoverFlip() {
+        const box = document.getElementById("cover-flip-box");
+        if (box) {
+            box.classList.toggle("flipped");
+        }
     }
 
     // Helper functions
