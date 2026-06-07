@@ -813,17 +813,33 @@
                 padding: 0.08rem 0.25rem;
             }
             .modal-content {
-                padding: 1rem;
+                padding: 1.25rem;
                 border-radius: 12px;
             }
-            .modal-body {
+            .modal-top-section {
                 flex-direction: column;
+                align-items: center;
+                gap: 1rem;
+            }
+            .modal-covers-container {
+                justify-content: center;
+                width: 100%;
                 gap: 0.75rem;
             }
-            .cover-flip-container {
-                width: 105px;
-                height: 150px;
-                margin: 0 auto;
+            .modal-cover-wrapper img {
+                width: 100px;
+                height: 143px;
+            }
+            .modal-meta-container {
+                width: 100%;
+                text-align: center;
+                align-items: center;
+            }
+            .modal-badges {
+                justify-content: center;
+            }
+            .modal-subjects {
+                justify-content: center;
             }
             .modal-title {
                 font-size: 1.45rem;
@@ -920,56 +936,144 @@
             transform: scale(1.1);
         }
 
-        /* 3D Cover Flip and Modal Layout */
-        .modal-body {
+        /* Subjects Expandable Trigger styling */
+        .expand-trigger {
+            font-size: 0.7rem;
+            padding: 0.15rem 0.4rem;
+            color: #8ef7d3 !important;
+            cursor: pointer;
+            border: 1px dashed rgba(0, 210, 141, 0.3) !important;
+            background: rgba(0, 210, 141, 0.03) !important;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+            display: inline-block;
+        }
+        .expand-trigger:hover {
+            border: 1px solid var(--primary-accent) !important;
+            color: var(--primary-accent) !important;
+            background: rgba(0, 210, 141, 0.1) !important;
+            box-shadow: 0 0 5px rgba(0, 210, 141, 0.3);
+        }
+        .expand-trigger.expanded {
+            border: 1px solid rgba(255, 255, 255, 0.15) !important;
+            background: rgba(255, 255, 255, 0.05) !important;
+            color: var(--text-secondary) !important;
+        }
+        .expand-trigger.expanded:hover {
+            border: 1px solid var(--text-primary) !important;
+            color: var(--text-primary) !important;
+            background: rgba(255, 255, 255, 0.1) !important;
+            box-shadow: none;
+        }
+
+        /* Canvas-Optimized Modal Layout */
+        .modal-body-layout {
             display: flex;
-            gap: 1.5rem;
+            flex-direction: column;
+            gap: 1.25rem;
             margin-top: 1rem;
         }
-        .cover-flip-container {
-            perspective: 1000px;
-            width: 150px;
-            height: 215px;
-            cursor: pointer;
+        .modal-top-section {
+            display: flex;
+            gap: 1.5rem;
+            align-items: flex-start;
+        }
+        .modal-covers-container {
+            display: flex;
+            gap: 0.75rem;
             flex-shrink: 0;
         }
-        .cover-flip-card {
-            width: 100%;
-            height: 100%;
-            position: relative;
-            transform-style: preserve-3d;
-            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .cover-flip-container.flipped .cover-flip-card {
-            transform: rotateY(180deg);
-        }
-        .cover-front, .cover-back {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            backface-visibility: hidden;
-            border-radius: 8px;
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
-        }
-        .cover-front img, .cover-back img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            border-radius: 7px;
-        }
-        .cover-back {
-            transform: rotateY(180deg);
-        }
-        .flip-hint {
-            font-size: 0.65rem;
-            color: var(--text-muted);
-            text-align: center;
-            margin-top: 0.5rem;
+        .modal-cover-wrapper {
             display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.25rem;
+        }
+        .modal-cover-wrapper img {
+            width: 110px;
+            height: 158px;
+            object-fit: cover;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+            cursor: pointer;
+            transition: transform 0.2s ease, border-color 0.2s ease;
+        }
+        .modal-cover-wrapper img:hover {
+            transform: scale(1.04);
+            border-color: var(--primary-accent);
+        }
+        .cover-caption {
+            font-size: 0.62rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .modal-meta-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        .modal-synopsis-section {
+            border-top: 1px solid var(--border-color);
+            padding-top: 1rem;
+            margin-bottom: 0;
+        }
+
+        /* Lightbox Overlay for Maximized Cover */
+        .lightbox-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(5, 5, 5, 0.9);
+            backdrop-filter: blur(20px);
+            display: none;
             align-items: center;
             justify-content: center;
-            gap: 0.25rem;
+            z-index: 2000;
+            cursor: pointer;
+            animation: fadeIn 0.25s ease;
+        }
+        .lightbox-content {
+            position: relative;
+            max-width: 90%;
+            max-height: 90%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: default;
+        }
+        .lightbox-img {
+            max-width: 100%;
+            max-height: 85vh;
+            object-fit: contain;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+            transform: scale(0.95);
+            animation: zoomIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        @keyframes zoomIn {
+            to { transform: scale(1); }
+        }
+        .lightbox-close {
+            position: absolute;
+            top: 1rem;
+            right: 1.25rem;
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 2.2rem;
+            line-height: 1;
+            transition: color 0.2s ease;
+            z-index: 2100;
+        }
+        .lightbox-close:hover {
+            color: var(--text-primary);
         }
     </style>
     
@@ -1058,6 +1162,7 @@
                     <option value="all">All Locations</option>
                     <option value="kindle">On Kindle (📱)</option>
                     <option value="onedrive">OneDrive Only (💾)</option>
+                    <option value="both">On Both (📱+💾)</option>
                 </select>
             </div>
 
@@ -1148,46 +1253,54 @@
         <button class="modal-close" onclick="closeModal()">
             <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg>
         </button>
-        <div class="modal-body">
-            <div id="modal-cover-container" style="display: none; flex-direction: column; align-items: center;">
-                <div class="cover-flip-container" id="cover-flip-box" onclick="toggleCoverFlip()">
-                    <div class="cover-flip-card">
-                        <div class="cover-front">
-                            <img id="modal-cover-img" src="" alt="Front Cover" />
-                        </div>
-                        <div class="cover-back">
-                            <img id="modal-cover-back-img" src="" alt="Back Cover" />
-                        </div>
+        <div class="modal-body-layout">
+            <div class="modal-top-section">
+                <!-- Side-by-side covers -->
+                <div id="modal-covers-container" class="modal-covers-container" style="display: none;">
+                    <div class="modal-cover-wrapper" id="modal-front-wrapper">
+                        <img id="modal-cover-img" src="" alt="Front Cover" onclick="openLightbox(this.src)" />
+                        <div class="cover-caption">Front Cover</div>
+                    </div>
+                    <div class="modal-cover-wrapper" id="modal-back-wrapper">
+                        <img id="modal-cover-back-img" src="" alt="Back Cover" onclick="openLightbox(this.src)" />
+                        <div class="cover-caption">Back Cover</div>
                     </div>
                 </div>
-                <div class="flip-hint" id="cover-flip-hint">
-                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 6.2M20 3v4h-4"/></svg>
-                    Click cover to flip 🔄
+                
+                <!-- Metadata container -->
+                <div class="modal-meta-container">
+                    <div class="modal-header" style="margin-top: 0; padding-bottom: 0.5rem; margin-bottom: 0.5rem; border-bottom: 1px solid var(--border-color);">
+                        <div class="modal-badges" id="modal-badges"></div>
+                        <h2 class="modal-title" id="modal-title">-</h2>
+                        <div class="modal-author" id="modal-author">-</div>
+                        <div class="modal-year" id="modal-year">-</div>
+                    </div>
+                    
+                    <div class="modal-section" id="modal-subjects-section" style="margin-bottom: 0;">
+                        <div class="modal-section-title" style="font-size: 0.8rem; margin-bottom: 0.25rem;">Subjects & Genres</div>
+                        <div class="subject-tags" id="modal-subjects"></div>
+                    </div>
                 </div>
             </div>
-            <div style="flex: 1; min-width: 250px;">
-                <div class="modal-header" style="margin-top: 0; padding-bottom: 0.75rem; margin-bottom: 1rem;">
-                    <div class="modal-badges" id="modal-badges"></div>
-                    <h2 class="modal-title" id="modal-title">-</h2>
-                    <div class="modal-author" id="modal-author">-</div>
-                    <div class="modal-year" id="modal-year">-</div>
-                </div>
-                
-                <div class="modal-section" style="margin-bottom: 1rem;">
-                    <div class="modal-section-title" style="font-size: 0.8rem; margin-bottom: 0.25rem;">Synopsis / Description</div>
-                    <div class="modal-description" id="modal-description" style="font-size: 0.88rem; line-height: 1.5;">-</div>
-                </div>
-        
-                <div class="modal-section" id="modal-subjects-section" style="margin-bottom: 1rem;">
-                    <div class="modal-section-title" style="font-size: 0.8rem; margin-bottom: 0.25rem;">Subjects & Genres</div>
-                    <div class="subject-tags" id="modal-subjects"></div>
-                </div>
+            
+            <!-- Full-width Synopsis -->
+            <div class="modal-section modal-synopsis-section">
+                <div class="modal-section-title" style="font-size: 0.8rem; margin-bottom: 0.25rem;">Synopsis / Description</div>
+                <div class="modal-description" id="modal-description" style="font-size: 0.88rem; line-height: 1.5;">-</div>
             </div>
         </div>
 
         <div class="modal-actions" id="modal-actions" style="margin-top: 1.5rem; padding-top: 1rem;">
             <!-- Populated via script -->
         </div>
+    </div>
+</div>
+
+<!-- LIGHTBOX MODAL (FOR MAXIMIZING COVER) -->
+<div id="lightbox-modal" class="lightbox-overlay" onclick="closeLightbox()">
+    <button class="lightbox-close" onclick="closeLightbox()">&times;</button>
+    <div class="lightbox-content" onclick="event.stopPropagation()">
+        <img id="lightbox-img" class="lightbox-img" src="" alt="Maximized Cover" />
     </div>
 </div>
 
@@ -1219,6 +1332,65 @@
             tag = tag.substring(0, 12) + "...";
         }
         return tag;
+    }
+ 
+    // Deterministic tag color-coding using BCG Green palette shades
+    function getTagStyle(tagName) {
+        const lower = tagName.toLowerCase();
+        let hash = 0;
+        for (let i = 0; i < lower.length; i++) {
+            hash = lower.charCodeAt(i) + ((hash << 5) - hash);
+        }
+        const index = Math.abs(hash) % 4;
+        
+        const styles = [
+            // 0. Soft Mint Green
+            { bg: 'rgba(0, 210, 141, 0.07)', color: '#8ef7d3', border: 'rgba(0, 210, 141, 0.22)' },
+            // 1. Sage Green
+            { bg: 'rgba(163, 184, 153, 0.08)', color: '#b9c9b2', border: 'rgba(163, 184, 153, 0.22)' },
+            // 2. Soft Emerald / BCG Accent
+            { bg: 'rgba(0, 146, 112, 0.07)', color: '#a3e2c9', border: 'rgba(0, 146, 112, 0.22)' },
+            // 3. Clean Gray-Green
+            { bg: 'rgba(255, 255, 255, 0.02)', color: '#a0b0a8', border: 'rgba(255, 255, 255, 0.08)' }
+        ];
+        
+        const s = styles[index];
+        return `background: ${s.bg}; color: ${s.color}; border: 1px solid ${s.border};`;
+    }
+ 
+    // Toggle hidden tags inline
+    function toggleTags(e, trigger, containerId) {
+        if (e) e.stopPropagation(); // Stop row click opening the modal
+        const container = document.getElementById(`tags-container-${containerId}`);
+        if (!container) return;
+        const hiddenTags = container.querySelectorAll('.hidden-tag');
+        const isExpanded = trigger.getAttribute('data-expanded') === 'true';
+        
+        if (isExpanded) {
+            hiddenTags.forEach(tag => tag.style.display = 'none');
+            trigger.innerText = `+${hiddenTags.length}`;
+            trigger.setAttribute('data-expanded', 'false');
+            trigger.classList.remove('expanded');
+        } else {
+            hiddenTags.forEach(tag => tag.style.display = 'inline-block');
+            trigger.innerText = 'Less';
+            trigger.setAttribute('data-expanded', 'true');
+            trigger.classList.add('expanded');
+        }
+    }
+
+    // Lightbox Controls for Maximizing Covers
+    function openLightbox(src) {
+        if (!src) return;
+        const lightbox = document.getElementById("lightbox-modal");
+        const lightboxImg = document.getElementById("lightbox-img");
+        lightboxImg.src = src;
+        lightbox.style.display = "flex";
+    }
+
+    function closeLightbox() {
+        const lightbox = document.getElementById("lightbox-modal");
+        lightbox.style.display = "none";
     }
 
     // State Databases
@@ -1327,10 +1499,15 @@
         }
         
         // Device filter
+        const onOneDrive = b => !!(b.onedrive_path || b.onedrive_share_link);
+        const onKindle = b => !!(b.is_on_kindle || b.kindle_path);
+        
         if (deviceFilter === "kindle") {
-            books = books.filter(b => b.is_on_kindle);
+            books = books.filter(onKindle);
         } else if (deviceFilter === "onedrive") {
-            books = books.filter(b => !b.is_on_kindle);
+            books = books.filter(b => onOneDrive(b) && !onKindle(b));
+        } else if (deviceFilter === "both") {
+            books = books.filter(b => onOneDrive(b) && onKindle(b));
         }
         
         // Sort
@@ -1370,21 +1547,37 @@
                 ? `<span class="badge ai" style="font-size: 0.7rem; padding: 0.15rem 0.4rem;">AI</span>`
                 : `<span class="badge non-ai" style="font-size: 0.7rem; padding: 0.15rem 0.4rem;">Tech</span>`;
                 
-            // Location Badge
-            const deviceBadgeHtml = `
-                <span class="badge ${b.is_on_kindle ? 'kindle' : 'onedrive'}">
-                    ${b.is_on_kindle ? 'Kindle' : 'OneDrive'}
-                </span>
-            `;
+            // Location Badge(s)
+            const onOneDrive = !!(b.onedrive_path || b.onedrive_share_link);
+            const onKindle = !!(b.is_on_kindle || b.kindle_path);
+            let deviceBadgeHtml = '';
             
-            // Subjects & Topics Tag Pills (limit to 3 for compactness)
-            const subjectsHtml = `<div class="subject-tags">
+            if (onOneDrive && onKindle) {
+                deviceBadgeHtml = `
+                    <div style="display: flex; gap: 0.25rem; justify-content: center; flex-wrap: wrap;">
+                        <span class="badge onedrive">OneDrive</span>
+                        <span class="badge kindle">Kindle</span>
+                    </div>
+                `;
+            } else if (onKindle) {
+                deviceBadgeHtml = `<span class="badge kindle">Kindle</span>`;
+            } else {
+                deviceBadgeHtml = `<span class="badge onedrive">OneDrive</span>`;
+            }
+            
+            // Subjects & Topics Tag Pills (limit to 3 for compactness, with color coding & expandability)
+            const cleanTitleKey = escapeHtml(b.title.replace(/[^a-z0-9]/gi, ''));
+            const subjectsHtml = `<div class="subject-tags" id="tags-container-${cleanTitleKey}">
                 ${aiIconHtml}
                 ${b.subjects && b.subjects.length > 0
-                    ? b.subjects.slice(0, 3).map(s => `<span class="tag" style="font-size: 0.7rem; padding: 0.15rem 0.4rem;">${cleanSubject(s)}</span>`).join('')
+                    ? b.subjects.map((s, idx) => {
+                        const clean = cleanSubject(s);
+                        const isHidden = idx >= 3;
+                        return `<span class="tag ${isHidden ? 'hidden-tag' : ''}" style="font-size: 0.7rem; padding: 0.15rem 0.4rem; ${isHidden ? 'display: none;' : ''} ${getTagStyle(clean)}">${clean}</span>`;
+                      }).join('')
                     : ''}
                 ${b.subjects && b.subjects.length > 3
-                    ? `<span class="tag" style="font-size: 0.7rem; padding: 0.15rem 0.4rem; color: var(--text-muted);">+${b.subjects.length - 3}</span>`
+                    ? `<span class="tag expand-trigger" onclick="toggleTags(event, this, '${cleanTitleKey}')">+${b.subjects.length - 3}</span>`
                     : ''}
             </div>`;
             
@@ -1500,11 +1693,18 @@
                 </div>
             `;
             
-            // Genres pills (limit to 3)
-             const subjectsHtml = r.subjects && r.subjects.length > 0
-                 ? `<div class="subject-tags">
-                      ${r.subjects.slice(0, 3).map(s => `<span class="tag" style="font-size: 0.7rem; padding: 0.15rem 0.4rem; border-radius: 4px;">${cleanSubject(s)}</span>`).join('')}
-                     ${r.subjects.length > 3 ? `<span class="tag" style="font-size: 0.7rem; padding: 0.15rem 0.4rem; color: var(--text-muted);">+${r.subjects.length - 3}</span>` : ''}
+            // Genres pills (limit to 3, with color coding & expandability)
+            const cleanRecKey = escapeHtml(r.key.replace(/[^a-z0-9]/gi, ''));
+            const subjectsHtml = r.subjects && r.subjects.length > 0
+                ? `<div class="subject-tags" id="tags-container-${cleanRecKey}">
+                     ${r.subjects.map((s, idx) => {
+                          const clean = cleanSubject(s);
+                          const isHidden = idx >= 3;
+                          return `<span class="tag ${isHidden ? 'hidden-tag' : ''}" style="font-size: 0.7rem; padding: 0.15rem 0.4rem; border-radius: 4px; ${isHidden ? 'display: none;' : ''} ${getTagStyle(clean)}">${clean}</span>`;
+                      }).join('')}
+                     ${r.subjects.length > 3
+                          ? `<span class="tag expand-trigger" onclick="toggleTags(event, this, '${cleanRecKey}')">+${r.subjects.length - 3}</span>`
+                          : ''}
                    </div>`
                 : `<span style="color: var(--text-muted);">_</span>`;
                 
@@ -1559,52 +1759,58 @@
         document.getElementById("modal-year").innerText = `Published: ${book.year}`;
         document.getElementById("modal-description").innerText = book.description;
         
-        // Badges
+        // Badges for Status
+        const onOneDrive = !!(book.onedrive_path || book.onedrive_share_link);
+        const onKindle = !!(book.is_on_kindle || book.kindle_path);
+        let locationBadges = '';
+        if (onOneDrive && onKindle) {
+            locationBadges = `
+                <span class="badge onedrive">OneDrive</span>
+                <span class="badge kindle">On Kindle</span>
+            `;
+        } else if (onKindle) {
+            locationBadges = `<span class="badge kindle">On Kindle</span>`;
+        } else if (onOneDrive) {
+            locationBadges = `<span class="badge onedrive">OneDrive Only</span>`;
+        }
+
         const badges = document.getElementById("modal-badges");
         badges.innerHTML = `
-            ${book.is_ai ? '<span class="badge ai">AI Topic</span>' : ''}
-            <span class="badge ${book.is_on_kindle ? 'kindle' : 'onedrive'}">
-                ${book.is_on_kindle ? 'On Kindle' : 'OneDrive Only'}
-            </span>
+            ${book.is_ai ? '<span class="badge ai">AI Topic</span>' : '<span class="badge non-ai">Tech</span>'}
+            ${locationBadges}
         `;
         
-        // Handle cover images (Front and Back cover flip setup)
-        const coverContainer = document.getElementById("modal-cover-container");
+        // Handle cover images (Side-by-side layout)
+        const coversContainer = document.getElementById("modal-covers-container");
         const coverImg = document.getElementById("modal-cover-img");
         const coverBackImg = document.getElementById("modal-cover-back-img");
-        const flipHint = document.getElementById("cover-flip-hint");
-        const flipBox = document.getElementById("cover-flip-box");
-        
-        if (flipBox) {
-            flipBox.classList.remove("flipped");
-        }
+        const backWrapper = document.getElementById("modal-back-wrapper");
         
         if (book.cover_path) {
             coverImg.src = book.cover_path;
-            coverContainer.style.display = "flex";
+            coversContainer.style.display = "flex";
             
             if (book.back_cover_path) {
                 coverBackImg.src = book.back_cover_path;
-                coverBackImg.style.display = "block";
-                flipHint.style.display = "flex";
-                flipBox.style.pointerEvents = "auto";
+                backWrapper.style.display = "flex";
             } else {
                 coverBackImg.src = "";
-                coverBackImg.style.display = "none";
-                flipHint.style.display = "none";
-                flipBox.style.pointerEvents = "none";
+                backWrapper.style.display = "none";
             }
         } else {
             coverImg.src = "";
             coverBackImg.src = "";
-            coverContainer.style.display = "none";
+            coversContainer.style.display = "none";
         }
         
         // Subjects
         const tagsDiv = document.getElementById("modal-subjects");
         const subjectsSection = document.getElementById("modal-subjects-section");
         if (book.subjects && book.subjects.length > 0) {
-            tagsDiv.innerHTML = book.subjects.map(s => `<span class="tag">${cleanSubject(s)}</span>`).join('');
+            tagsDiv.innerHTML = book.subjects.map(s => {
+                const clean = cleanSubject(s);
+                return `<span class="tag" style="${getTagStyle(clean)}">${clean}</span>`;
+            }).join('');
             subjectsSection.style.display = "block";
         } else {
             subjectsSection.style.display = "none";
@@ -1623,22 +1829,12 @@
             `;
         }
         
-
-        
         document.getElementById("details-modal").style.display = "flex";
     }
 
     // Close Modal
     function closeModal(event) {
         document.getElementById("details-modal").style.display = "none";
-    }
-
-    // Toggle 3D Cover Flip
-    function toggleCoverFlip() {
-        const box = document.getElementById("cover-flip-box");
-        if (box) {
-            box.classList.toggle("flipped");
-        }
     }
 
     // Helper functions
