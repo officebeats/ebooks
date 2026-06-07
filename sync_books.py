@@ -5,6 +5,8 @@ import zipfile
 import xml.etree.ElementTree as ET
 import paramiko
 import subprocess
+import sys
+import argparse
 
 # Configurations
 KINDLE_IP = "192.168.68.79"
@@ -20,6 +22,28 @@ ONEDRIVE_QUEUE_DIR = os.path.join(ONEDRIVE_EBOOKS_DIR, "SendToKindle")
 REPO_DIR = os.path.join(ONEDRIVE_EBOOKS_DIR, "ebooks")
 BOOKS_JSON_PATH = os.path.join(REPO_DIR, "books.json")
 README_MD_PATH = os.path.join(REPO_DIR, "README.md")
+
+# AI Keywords for filtering
+AI_KEYWORDS = [
+    r'\bai\b', r'\bais\b', r'artificial intelligence', r'llm', r'gpt', r'generative',
+    r'machine learning', r'deep learning', r'neural', r'prompt engineering',
+    r'agentic', r'openai', r'copilot', r'algorithms', r'chatgpt', r'langchain',
+    r'vibe coding', r'aeo'
+]
+
+def is_ai_book(book_meta):
+    """
+    Check if a book is AI-related based on its metadata.
+    """
+    title = book_meta.get("title", "")
+    subjects = book_meta.get("subjects", [])
+    description = book_meta.get("description", "")
+    
+    text = (title + " " + " ".join(subjects) + " " + description).lower()
+    for kw in AI_KEYWORDS:
+        if re.search(kw, text):
+            return True
+    return False
 
 # Create directories if they do not exist
 os.makedirs(ONEDRIVE_EPUB_DIR, exist_ok=True)
@@ -124,6 +148,29 @@ def get_kindle_free_space(ssh):
     return None
 
 def main():
+    # Force stdout/stderr to UTF-8 encoding on Windows to prevent UnicodeEncodeErrors when printing book metadata
+    if hasattr(sys.stdout, 'reconfigure'):
+        try:
+            sys.stdout.reconfigure(encoding='utf-8')
+        except:
+            pass
+    if hasattr(sys.stderr, 'reconfigure'):
+        try:
+            sys.stderr.reconfigure(encoding='utf-8')
+        except:
+            pass
+
+    parser = argparse.ArgumentParser(description="Sync ebooks between Kindle and OneDrive")
+    parser.add_argument("--purge-non-ai", action="store_true", help="Purge non-AI books from Kindle")
+    parser.add_argument("--dry-run", action="store_true", help="Dry run (preview changes without deleting/writing files)")
+    args = parser.parse_args()
+    
+    purge_non_ai = args.purge_non_ai
+    dry_run = args.dry_run
+    
+    if dry_run:
+        print("=== DRY RUN MODE: No files will be modified ===")
+
     print("Loading books database...")
     db = load_books_db()
 
@@ -158,11 +205,10 @@ def main():
     # Scan local OneDrive archive
     local_files = [os.path.join(ONEDRIVE_EPUB_DIR, f) for f in os.listdir(ONEDRIVE_EPUB_DIR) if f.endswith(".epub")]
     print(f"Found {len(local_files)} epubs in OneDrive archive.")
+    local_norm_names = {normalize_filename(os.path.basename(p)): p for p in local_files}
 
     # 1. Back up Kindle -> OneDrive
     if kindle_connected:
-        local_norm_names = {normalize_filename(os.path.basename(p)): p for p in local_files}
-        
         for k_path in kindle_epubs:
             basename = os.path.basename(k_path)
             norm_name = normalize_filename(basename)
@@ -171,11 +217,49 @@ def main():
                 local_dest = os.path.join(ONEDRIVE_EPUB_DIR, basename)
                 print(f"Backing up: {basename} -> OneDrive...")
                 try:
-                    sftp.get(k_path, local_dest)
+                    if not dry_run:
+                        sftp.get(k_path, local_dest)
                     local_files.append(local_dest)
                     local_norm_names[norm_name] = local_dest
                 except Exception as ex:
                     print(f"Failed to download {basename}: {ex}")
+
+    # 1b. Purge non-AI books from Kindle (if enabled)
+    purged_count = 0
+    if kindle_connected and purge_non_ai:
+        print("Running AI-topic cleanup on Kindle...")
+        kindle_epubs_remaining = list(kindle_epubs)
+        for k_path in kindle_epubs:
+            basename = os.path.basename(k_path)
+            norm_name = normalize_filename(basename)
+            
+            local_path = local_norm_names.get(norm_name)
+            if local_path and (dry_run or os.path.exists(local_path)):
+                # Use metadata from db if cached, else read file
+                if norm_name in db:
+                    meta = db[norm_name]
+                else:
+                    meta = get_epub_metadata(local_path)
+                
+                if not is_ai_book(meta):
+                    print(f"[Purge] Book '{meta.get('title', basename)}' is not AI-related.")
+                    purged_count += 1
+                    if not dry_run:
+                        try:
+                            sftp.remove(k_path)
+                            print(f"  Deleted from Kindle: {basename}")
+                            if k_path in kindle_epubs_remaining:
+                                kindle_epubs_remaining.remove(k_path)
+                        except Exception as ex:
+                            print(f"  Failed to delete {basename} from Kindle: {ex}")
+                    else:
+                        print(f"  [Dry Run] Would delete from Kindle: {basename}")
+            else:
+                print(f"  Warning: Cannot purge '{basename}' because it is not backed up in OneDrive.")
+        
+        if not dry_run:
+            kindle_epubs = kindle_epubs_remaining
+        print(f"Purge check complete. Identified {purged_count} non-AI books.")
 
     # 2. Upload queue (SendToKindle) -> Kindle
     if kindle_connected:
@@ -195,15 +279,18 @@ def main():
                 dest_path = f"{KINDLE_EPUB_DIR}/{basename}"
                 print(f"Uploading {basename} to Kindle...")
                 try:
-                    sftp.put(q_file, dest_path)
-                    # Archive local file
-                    archive_path = os.path.join(ONEDRIVE_EPUB_DIR, basename)
-                    # If file already exists in archive, generate unique name
-                    if os.path.exists(archive_path):
-                        os.remove(q_file) # Just delete from queue since we have it archived
+                    if not dry_run:
+                        sftp.put(q_file, dest_path)
+                        # Archive local file
+                        archive_path = os.path.join(ONEDRIVE_EPUB_DIR, basename)
+                        # If file already exists in archive, generate unique name
+                        if os.path.exists(archive_path):
+                            os.remove(q_file) # Just delete from queue since we have it archived
+                        else:
+                            os.rename(q_file, archive_path)
+                            local_files.append(archive_path)
                     else:
-                        os.rename(q_file, archive_path)
-                        local_files.append(archive_path)
+                        print(f"  [Dry Run] Would upload {basename} and archive it.")
                         
                     if free_space is not None:
                         free_space -= filesize
@@ -285,9 +372,15 @@ def main():
                     "kindle_path": k_path
                 }
                 updated_db[norm_name] = entry
+    # Determine AI status for all entries
+    for entry in updated_db.values():
+        entry["is_ai"] = is_ai_book(entry)
 
-    save_books_db(updated_db)
-    print(f"Database updated. Total registered books: {len(updated_db)}")
+    if not dry_run:
+        save_books_db(updated_db)
+        print(f"Database updated. Total registered books: {len(updated_db)}")
+    else:
+        print(f"[Dry Run] Would save books database with {len(updated_db)} entries.")
 
     # 4. Generate README.md Markdown Listing
     print("Generating README.md...")
@@ -320,11 +413,12 @@ def main():
     
     md += "## Books List\n\n"
     md += f"Total books cataloged: **{len(sorted_books)}**\n\n"
-    md += "| Status | Title & Author | Year | Subjects / Genres | Synopsis | Local OneDrive Link |\n"
-    md += "| :---: | | :---: | | | :---: |\n"
+    md += "| AI Topic? | Status | Title & Author | Year | Subjects / Genres | Synopsis | Local OneDrive Link |\n"
+    md += "| :---: | :---: | | :---: | | | :---: |\n"
     
     for book in sorted_books:
         status_icon = "📱 Kindle & 💾 OneDrive" if book["is_on_kindle"] else "💾 OneDrive Only"
+        ai_icon = "🤖 Yes" if book.get("is_ai", False) else "❌ No"
         
         # Clean synopsis snippet (limit to 140 chars)
         synopsis = book["description"]
@@ -346,13 +440,20 @@ def main():
             file_url = f"file:///{abs_path.replace('\\', '/')}"
             local_link = f"[Open File]({file_url})"
             
-        md += f"| {status_icon} | {title_author} | {book['year']} | {subjects} | {synopsis} | {local_link} |\n"
+        md += f"| {ai_icon} | {status_icon} | {title_author} | {book['year']} | {subjects} | {synopsis} | {local_link} |\n"
 
-    with open(README_MD_PATH, 'w', encoding='utf-8') as f:
-        f.write(md)
-    print("README.md generated successfully!")
+    if not dry_run:
+        with open(README_MD_PATH, 'w', encoding='utf-8') as f:
+            f.write(md)
+        print("README.md generated successfully!")
+    else:
+        print(f"[Dry Run] Would write README.md (length: {len(md)} characters).")
 
     # 5. Git Commit & Push
+    if dry_run:
+        print("[Dry Run] Skipping git commit and push.")
+        return
+        
     try:
         print("Pushing updates to GitHub...")
         # Check if initialized
