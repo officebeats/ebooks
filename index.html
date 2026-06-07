@@ -1,0 +1,1282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>eBooks Vault & Recommendations</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --surface-color: #111827;
+            --card-bg: rgba(17, 24, 39, 0.6);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --text-primary: #f3f4f6;
+            --text-secondary: #9ca3af;
+            --text-muted: #6b7280;
+            
+            --primary-accent: #a855f7; /* Neon Purple */
+            --secondary-accent: #3b82f6; /* Neon Blue */
+            --success-color: #10b981; /* Emerald */
+            --warning-color: #f59e0b; /* Amber */
+            
+            --glow-purple: 0 0 15px rgba(168, 85, 247, 0.4);
+            --glow-blue: 0 0 15px rgba(59, 130, 246, 0.4);
+            
+            --glass-blur: blur(16px);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(168, 85, 247, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(59, 130, 246, 0.15) 0%, transparent 40%);
+            background-attachment: fixed;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(11, 15, 25, 0.5);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-accent);
+        }
+
+        /* Main Container */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+
+        /* Header Styles */
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+            position: relative;
+        }
+
+        h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #f3f4f6 0%, #a855f7 50%, #3b82f6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.05em;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            font-weight: 300;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Stats Bar */
+        .stats-bar {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+            margin-bottom: 2rem;
+        }
+
+        .stat-item {
+            background: var(--card-bg);
+            backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--border-color);
+            border-radius: 50px;
+            padding: 0.5rem 1.5rem;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-val {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .stat-val.purple { color: #d8b4fe; }
+        .stat-val.blue { color: #93c5fd; }
+        .stat-val.green { color: #6ee7b7; }
+
+        /* Quick Links */
+        .quick-links {
+            margin-bottom: 2.5rem;
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+        }
+
+        .btn-link {
+            background: rgba(168, 85, 247, 0.1);
+            border: 1px solid rgba(168, 85, 247, 0.2);
+            color: #d8b4fe;
+            text-decoration: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+            backdrop-filter: var(--glass-blur);
+        }
+
+        .btn-link:hover {
+            background: rgba(168, 85, 247, 0.2);
+            border-color: var(--primary-accent);
+            box-shadow: var(--glow-purple);
+            transform: translateY(-2px);
+        }
+
+        /* Navigation Tabs */
+        .tabs {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 2.5rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 1rem;
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.2rem;
+            font-weight: 600;
+            padding: 0.6rem 1.5rem;
+            cursor: pointer;
+            position: relative;
+            transition: color 0.3s ease;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-primary);
+        }
+
+        .tab-btn.active {
+            color: var(--text-primary);
+        }
+
+        .tab-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1rem;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, var(--primary-accent), var(--secondary-accent));
+            box-shadow: 0 0 10px var(--primary-accent);
+        }
+
+        /* View Panels */
+        .panel {
+            display: none;
+            animation: fadeIn 0.4s ease forwards;
+        }
+
+        .panel.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Control Bar (Filters / Search) */
+        .control-bar {
+            background: var(--card-bg);
+            backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            gap: 1rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .control-group label {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .search-wrapper {
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 0.75rem 1rem 0.75rem 2.5rem;
+            color: var(--text-primary);
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.95rem;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--primary-accent);
+            box-shadow: 0 0 8px rgba(168, 85, 247, 0.2);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 0.8rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+            pointer-events: none;
+        }
+
+        .select-input {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            color: var(--text-primary);
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.95rem;
+            outline: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239ca3af'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            background-size: 1.25rem;
+        }
+
+        .select-input:focus {
+            border-color: var(--secondary-accent);
+            box-shadow: 0 0 8px rgba(59, 130, 246, 0.2);
+        }
+
+        /* Grid Layout */
+        .books-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 1.5rem;
+        }
+
+        /* Book Card */
+        .book-card {
+            background: var(--card-bg);
+            backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 380px;
+            position: relative;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .book-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, transparent, transparent);
+            transition: all 0.3s ease;
+        }
+
+        .book-card.ai::before {
+            background: linear-gradient(90deg, var(--primary-accent), var(--secondary-accent));
+        }
+
+        .book-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(168, 85, 247, 0.3);
+            box-shadow: 0 12px 30px rgba(168, 85, 247, 0.15);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .badge {
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.25rem 0.6rem;
+            border-radius: 50px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .badge.ai {
+            background: rgba(168, 85, 247, 0.15);
+            color: #d8b4fe;
+            border: 1px solid rgba(168, 85, 247, 0.3);
+        }
+
+        .badge.kindle {
+            background: rgba(16, 185, 129, 0.15);
+            color: #6ee7b7;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .badge.onedrive {
+            background: rgba(59, 130, 246, 0.15);
+            color: #93c5fd;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+
+        .book-year {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .book-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            line-height: 1.3;
+            color: var(--text-primary);
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            height: 3.25rem;
+        }
+
+        .book-author {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .book-description {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 4;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            margin-bottom: auto;
+            flex-grow: 1;
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1.25rem;
+            border-top: 1px solid var(--border-color);
+            padding-top: 1rem;
+        }
+
+        .btn {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 500;
+            padding: 0.5rem 0.75rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--text-secondary);
+        }
+
+        .btn.btn-primary {
+            background: linear-gradient(135deg, var(--primary-accent) 0%, var(--secondary-accent) 100%);
+            border: none;
+            color: white;
+        }
+
+        .btn.btn-primary:hover {
+            opacity: 0.9;
+            box-shadow: var(--glow-purple);
+        }
+
+        /* Checkbox tally for recommendations */
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            cursor: pointer;
+            user-select: none;
+            padding: 0.5rem 0;
+        }
+
+        .custom-checkbox {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--border-color);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .checkbox-container:hover .custom-checkbox {
+            border-color: var(--primary-accent);
+        }
+
+        .checkbox-container.checked .custom-checkbox {
+            background: var(--primary-accent);
+            border-color: var(--primary-accent);
+            box-shadow: var(--glow-purple);
+        }
+
+        .custom-checkbox svg {
+            width: 12px;
+            height: 12px;
+            stroke: white;
+            stroke-width: 3px;
+            fill: none;
+            display: none;
+        }
+
+        .checkbox-container.checked .custom-checkbox svg {
+            display: block;
+        }
+
+        .checkbox-label {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+        }
+
+        .checkbox-container.checked .checkbox-label {
+            color: var(--text-muted);
+            text-decoration: line-through;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(11, 15, 25, 0.8);
+            backdrop-filter: blur(12px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 1.5rem;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal-content {
+            background: #111827;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            max-width: 700px;
+            width: 100%;
+            max-height: 85vh;
+            overflow-y: auto;
+            padding: 2.5rem;
+            position: relative;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 1.25rem;
+            right: 1.25rem;
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: color 0.2s ease;
+        }
+
+        .modal-close:hover {
+            color: var(--text-primary);
+        }
+
+        .modal-header {
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 1rem;
+        }
+
+        .modal-badges {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .modal-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            line-height: 1.2;
+            color: var(--text-primary);
+        }
+
+        .modal-author {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .modal-year {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .modal-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-section-title {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .modal-description {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        .subject-tags {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .tag {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            padding: 0.3rem 0.75rem;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .path-display {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            word-break: break-all;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+            border-top: 1px solid var(--border-color);
+            padding-top: 1.5rem;
+        }
+
+        /* Toast Notifications */
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: rgba(16, 185, 129, 0.9);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            display: none;
+            align-items: center;
+            gap: 0.5rem;
+            box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3);
+            z-index: 2000;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 900px) {
+            .control-bar {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .control-bar {
+                grid-template-columns: 1fr;
+            }
+            h1 {
+                font-size: 2.2rem;
+            }
+            .modal-content {
+                padding: 1.5rem;
+            }
+            .modal-actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>eBooks Vault</h1>
+        <div class="subtitle">Personal archive index & catalog reference portal</div>
+        
+        <!-- Stats -->
+        <div class="stats-bar">
+            <div class="stat-item">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+                Total eBooks: <span class="stat-val" id="stat-total">-</span>
+            </div>
+            <div class="stat-item">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                AI Library: <span class="stat-val purple" id="stat-ai">-</span>
+            </div>
+            <div class="stat-item">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                On Kindle: <span class="stat-val green" id="stat-kindle">-</span>
+            </div>
+            <div class="stat-item">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9.663 17h4.673M12 3v1m6.364.364l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                Recommendations: <span class="stat-val blue" id="stat-recs">-</span>
+            </div>
+        </div>
+
+        <!-- Links -->
+        <div class="quick-links">
+            <a href="[Insert OneDrive Shared Link Here]" id="onedrive-shared-btn" class="btn-link" target="_blank">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4 4 0 003 15z"/></svg>
+                Browse OneDrive Shared Library
+            </a>
+            <a href="https://openlibrary.org" class="btn-link" target="_blank" style="background: rgba(59, 130, 246, 0.1); border-color: rgba(59, 130, 246, 0.2); color: #93c5fd;">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                Open Library Database
+            </a>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('library')">My Library</button>
+            <button class="tab-btn" onclick="switchTab('recommendations')">Book Recommendations</button>
+        </div>
+    </header>
+
+    <!-- 1. LIBRARY PANEL -->
+    <div id="library-panel" class="panel active">
+        <!-- Control Bar -->
+        <div class="control-bar">
+            <div class="control-group">
+                <label for="lib-search">Search Library</label>
+                <div class="search-wrapper">
+                    <svg class="search-icon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    <input type="text" id="lib-search" class="search-input" placeholder="Title, author, genres, description..." oninput="filterLibrary()">
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <label for="lib-ai-filter">AI Classification</label>
+                <select id="lib-ai-filter" class="select-input" onchange="filterLibrary()">
+                    <option value="all">All Topics</option>
+                    <option value="ai">AI Only (🤖)</option>
+                    <option value="non-ai">Non-AI Only</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label for="lib-device-filter">Device Status</label>
+                <select id="lib-device-filter" class="select-input" onchange="filterLibrary()">
+                    <option value="all">All Locations</option>
+                    <option value="kindle">On Kindle (📱)</option>
+                    <option value="onedrive">OneDrive Only (💾)</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label for="lib-sort">Sort By</label>
+                <select id="lib-sort" class="select-input" onchange="filterLibrary()">
+                    <option value="title-asc">Title (A - Z)</option>
+                    <option value="title-desc">Title (Z - A)</option>
+                    <option value="year-desc">Year (Newest First)</option>
+                    <option value="year-asc">Year (Oldest First)</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Books Grid -->
+        <div id="library-grid" class="books-grid">
+            <!-- Dynamically populated -->
+        </div>
+    </div>
+
+    <!-- 2. RECOMMENDATIONS PANEL -->
+    <div id="recommendations-panel" class="panel">
+        <!-- Control Bar -->
+        <div class="control-bar" style="grid-template-columns: 2fr 1fr 1fr;">
+            <div class="control-group">
+                <label for="rec-search">Search Recommendations</label>
+                <div class="search-wrapper">
+                    <svg class="search-icon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    <input type="text" id="rec-search" class="search-input" placeholder="Title, author, subjects..." oninput="filterRecommendations()">
+                </div>
+            </div>
+
+            <div class="control-group">
+                <label for="rec-tally-filter">Tally Checklist Status</label>
+                <select id="rec-tally-filter" class="select-input" onchange="filterRecommendations()">
+                    <option value="all">All Recommendations</option>
+                    <option value="pending">Pending [ ]</option>
+                    <option value="downloaded">Bought / Downloaded [x]</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label for="rec-sort">Sort By</label>
+                <select id="rec-sort" class="select-input" onchange="filterRecommendations()">
+                    <option value="date-desc">Release Date (Newest First)</option>
+                    <option value="date-asc">Release Date (Oldest First)</option>
+                    <option value="title-asc">Title (A - Z)</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Recommendations Tally Grid -->
+        <div id="recommendations-grid" class="books-grid">
+            <!-- Dynamically populated -->
+        </div>
+    </div>
+</div>
+
+<!-- DETAILS MODAL -->
+<div id="details-modal" class="modal-overlay" onclick="closeModal(event)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <button class="modal-close" onclick="closeModal()">
+            <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+        <div class="modal-header">
+            <div class="modal-badges" id="modal-badges"></div>
+            <h2 class="modal-title" id="modal-title">-</h2>
+            <div class="modal-author" id="modal-author">-</div>
+            <div class="modal-year" id="modal-year">-</div>
+        </div>
+        
+        <div class="modal-section">
+            <div class="modal-section-title">Synopsis / Description</div>
+            <div class="modal-description" id="modal-description">-</div>
+        </div>
+
+        <div class="modal-section" id="modal-subjects-section">
+            <div class="modal-section-title">Subjects & Genres</div>
+            <div class="subject-tags" id="modal-subjects"></div>
+        </div>
+
+        <div class="modal-section" id="modal-path-section">
+            <div class="modal-section-title">Local OneDrive Path</div>
+            <div class="path-display">
+                <span id="modal-path-text">-</span>
+                <button class="btn" onclick="copyLocalPath()" style="padding: 0.35rem 0.6rem; font-size: 0.75rem;">
+                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m-2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+                    Copy
+                </button>
+            </div>
+        </div>
+
+        <div class="modal-actions" id="modal-actions">
+            <!-- Populated via script -->
+        </div>
+    </div>
+</div>
+
+<!-- Toast notification -->
+<div id="toast" class="toast">
+    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>
+    <span id="toast-message">Copied to clipboard!</span>
+</div>
+
+<script>
+    // State Databases
+    let libraryData = {};
+    let recommendationsData = [];
+    let checkedRecKeys = new Set(); // Open Library keys that are checked off locally
+
+    // Initialize Page
+    document.addEventListener("DOMContentLoaded", () => {
+        // Load checked items from LocalStorage
+        const storedChecked = localStorage.getItem("checked_recommendations");
+        if (storedChecked) {
+            try {
+                checkedRecKeys = new Set(JSON.parse(storedChecked));
+            } catch (e) {
+                console.error("Error reading checklist cache:", e);
+            }
+        }
+        
+        // Load databases
+        Promise.all([
+            fetch("books.json").then(r => r.json()).catch(err => {
+                console.error("Could not load books.json:", err);
+                return {};
+            }),
+            fetch("recommendations.json").then(r => r.json()).catch(err => {
+                console.error("Could not load recommendations.json:", err);
+                return [];
+            })
+        ]).then(([lib, recs]) => {
+            libraryData = lib;
+            recommendationsData = recs;
+            
+            // Extract OneDrive link from UI button to replace placeholders
+            const sharedBtn = document.getElementById("onedrive-shared-btn");
+            const onedriveLink = sharedBtn.getAttribute("href");
+            
+            // Populate Stats
+            updateStats();
+            
+            // Render Books lists
+            filterLibrary();
+            filterRecommendations();
+        });
+    });
+
+    // Switch Nav Tabs
+    function switchTab(tab) {
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+        
+        if (tab === 'library') {
+            event.target.classList.add('active');
+            document.getElementById('library-panel').classList.add('active');
+        } else {
+            event.target.classList.add('active');
+            document.getElementById('recommendations-panel').classList.add('active');
+        }
+    }
+
+    // Update Stats Bar
+    function updateStats() {
+        const books = Object.values(libraryData);
+        const total = books.length;
+        const aiCount = books.filter(b => b.is_ai).length;
+        const kindleCount = books.filter(b => b.is_on_kindle).length;
+        const recCount = recommendationsData.length;
+        
+        document.getElementById("stat-total").innerText = total;
+        document.getElementById("stat-ai").innerText = aiCount;
+        document.getElementById("stat-kindle").innerText = kindleCount;
+        document.getElementById("stat-recs").innerText = recCount;
+    }
+
+    // Filter & Render Library List
+    function filterLibrary() {
+        const query = document.getElementById("lib-search").value.toLowerCase().trim();
+        const aiFilter = document.getElementById("lib-ai-filter").value;
+        const deviceFilter = document.getElementById("lib-device-filter").value;
+        const sortOption = document.getElementById("lib-sort").value;
+        
+        let books = Object.values(libraryData);
+        
+        // Search filter
+        if (query) {
+            books = books.filter(b => {
+                return b.title.toLowerCase().includes(query) ||
+                       b.author.toLowerCase().includes(query) ||
+                       b.description.toLowerCase().includes(query) ||
+                       (b.subjects && b.subjects.some(s => s.toLowerCase().includes(query)));
+            });
+        }
+        
+        // AI filter
+        if (aiFilter === "ai") {
+            books = books.filter(b => b.is_ai);
+        } else if (aiFilter === "non-ai") {
+            books = books.filter(b => !b.is_ai);
+        }
+        
+        // Device filter
+        if (deviceFilter === "kindle") {
+            books = books.filter(b => b.is_on_kindle);
+        } else if (deviceFilter === "onedrive") {
+            books = books.filter(b => !b.is_on_kindle);
+        }
+        
+        // Sort
+        books.sort((a, b) => {
+            if (sortOption === "title-asc") return a.title.localeCompare(b.title);
+            if (sortOption === "title-desc") return b.title.localeCompare(a.title);
+            
+            // Handle unknown year
+            const yearA = parseInt(a.year) || 0;
+            const yearB = parseInt(b.year) || 0;
+            if (sortOption === "year-desc") return yearB - yearA;
+            if (sortOption === "year-asc") return yearA - yearB;
+            return 0;
+        });
+        
+        renderLibraryGrid(books);
+    }
+
+    // Render Library cards
+    function renderLibraryGrid(books) {
+        const grid = document.getElementById("library-grid");
+        grid.innerHTML = "";
+        
+        if (books.length === 0) {
+            grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--text-secondary); padding: 4rem 0;">No books matched your criteria.</div>`;
+            return;
+        }
+        
+        books.forEach(b => {
+            const card = document.createElement("div");
+            card.className = `book-card ${b.is_ai ? 'ai' : ''}`;
+            
+            const badgesHtml = `
+                <div style="display: flex; gap: 0.35rem; flex-wrap: wrap;">
+                    ${b.is_ai ? '<span class="badge ai">🤖 AI</span>' : ''}
+                    <span class="badge ${b.is_on_kindle ? 'kindle' : 'onedrive'}">
+                        ${b.is_on_kindle ? '📱 Kindle' : '💾 OneDrive'}
+                    </span>
+                </div>
+            `;
+            
+            card.innerHTML = `
+                <div>
+                    <div class="card-header">
+                        ${badgesHtml}
+                        <span class="book-year">${b.year}</span>
+                    </div>
+                    <h3 class="book-title" title="${b.title}">${b.title}</h3>
+                    <p class="book-author">by ${b.author}</p>
+                    <p class="book-description">${b.description}</p>
+                </div>
+                <div class="card-actions">
+                    <button class="btn btn-primary" onclick="openBookModal('${escapeHtml(b.title)}')">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        Details
+                    </button>
+                    ${b.onedrive_path ? `
+                        <button class="btn" onclick="copyPathToClipboard('${escapeHtml(b.onedrive_path)}')">
+                            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m-2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+                            Copy Path
+                        </button>
+                    ` : ''}
+                </div>
+            `;
+            grid.appendChild(card);
+        });
+    }
+
+    // Filter & Render Recommendations
+    function filterRecommendations() {
+        const query = document.getElementById("rec-search").value.toLowerCase().trim();
+        const tallyFilter = document.getElementById("rec-tally-filter").value;
+        const sortOption = document.getElementById("rec-sort").value;
+        
+        let recs = [...recommendationsData];
+        
+        // Search
+        if (query) {
+            recs = recs.filter(r => {
+                return r.title.toLowerCase().includes(query) ||
+                       r.authors.some(a => a.toLowerCase().includes(query)) ||
+                       (r.subjects && r.subjects.some(s => s.toLowerCase().includes(query)));
+            });
+        }
+        
+        // Tally Checklist Filter
+        if (tallyFilter === "pending") {
+            recs = recs.filter(r => !checkedRecKeys.has(r.key));
+        } else if (tallyFilter === "downloaded") {
+            recs = recs.filter(r => checkedRecKeys.has(r.key));
+        }
+        
+        // Sort
+        recs.sort((a, b) => {
+            if (sortOption === "title-asc") return a.title.localeCompare(b.title);
+            if (sortOption === "date-desc") return b.date.localeCompare(a.date);
+            if (sortOption === "date-asc") return a.date.localeCompare(b.date);
+            return 0;
+        });
+        
+        renderRecommendationsGrid(recs);
+    }
+
+    // Render Recommendations cards
+    function renderRecommendationsGrid(recs) {
+        const grid = document.getElementById("recommendations-grid");
+        grid.innerHTML = "";
+        
+        if (recs.length === 0) {
+            grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--text-secondary); padding: 4rem 0;">No recommendations found.</div>`;
+            return;
+        }
+        
+        recs.forEach(r => {
+            const card = document.createElement("div");
+            const isChecked = checkedRecKeys.has(r.key);
+            card.className = `book-card ai`;
+            
+            // Generate subject pills
+            const subjectsHtml = r.subjects && r.subjects.length > 0 
+                ? `<div class="subject-tags" style="margin-top: 0.5rem; max-height: 52px; overflow: hidden;">
+                     ${r.subjects.map(s => `<span class="tag" style="font-size: 0.7rem; padding: 0.15rem 0.4rem; border-radius: 4px;">${s}</span>`).join('')}
+                   </div>`
+                : '';
+                
+            card.innerHTML = `
+                <div>
+                    <div class="card-header">
+                        <span class="badge ai">🤖 AI Topic</span>
+                        <span class="book-year">${r.year}</span>
+                    </div>
+                    <h3 class="book-title" title="${r.title}">${r.title}</h3>
+                    <p class="book-author">by ${r.authors.join(', ')}</p>
+                    ${subjectsHtml}
+                </div>
+                <div>
+                    <div class="checkbox-container ${isChecked ? 'checked' : ''}" onclick="toggleRecCheck('${escapeHtml(r.key)}')">
+                        <div class="custom-checkbox">
+                            <svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>
+                        </div>
+                        <span class="checkbox-label">Bought / Downloaded</span>
+                    </div>
+                    <div class="card-actions" style="margin-top: 0.75rem;">
+                        <a href="https://openlibrary.org${r.key}" class="btn btn-primary" target="_blank" style="text-decoration: none;">
+                            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                            Open Library
+                        </a>
+                    </div>
+                </div>
+            `;
+            grid.appendChild(card);
+        });
+    }
+
+    // Toggle Check state of recommended book
+    function toggleRecCheck(key) {
+        event.stopPropagation();
+        if (checkedRecKeys.has(key)) {
+            checkedRecKeys.delete(key);
+        } else {
+            checkedRecKeys.add(key);
+        }
+        
+        // Save to LocalStorage
+        localStorage.setItem("checked_recommendations", JSON.stringify(Array.from(checkedRecKeys)));
+        
+        // Refresh grids and stats
+        filterRecommendations();
+        updateStats();
+    }
+
+    // Copy local OneDrive path to clipboard
+    let activePathToCopy = "";
+    function copyPathToClipboard(relPath) {
+        event.stopPropagation();
+        const baseOneDrive = "C:\\Users\\admin-beats\\OneDrive\\03_Personal_Archive\\eBooks";
+        const fullPath = `${baseOneDrive}\\${relPath.replace(/\//g, '\\')}`;
+        
+        navigator.clipboard.writeText(fullPath).then(() => {
+            showToast(`Path copied: ${fullPath.substring(fullPath.lastIndexOf('\\') + 1)}`);
+        }).catch(err => {
+            console.error("Could not copy:", err);
+            showToast("Failed to copy path.", true);
+        });
+    }
+
+    function copyLocalPath() {
+        if (activePathToCopy) {
+            navigator.clipboard.writeText(activePathToCopy).then(() => {
+                showToast("Full local path copied to clipboard!");
+            });
+        }
+    }
+
+    // Toast utility
+    function showToast(message, isError = false) {
+        const toast = document.getElementById("toast");
+        const msg = document.getElementById("toast-message");
+        
+        msg.innerText = message;
+        toast.style.background = isError ? "rgba(239, 68, 68, 0.9)" : "rgba(16, 185, 129, 0.9)";
+        toast.style.boxShadow = isError ? "0 10px 25px rgba(239, 68, 68, 0.3)" : "0 10px 25px rgba(16, 185, 129, 0.3)";
+        toast.style.display = "flex";
+        
+        setTimeout(() => {
+            toast.style.display = "none";
+        }, 3000);
+    }
+
+    // Open Modal
+    function openBookModal(title) {
+        // Find book in DB
+        const book = Object.values(libraryData).find(b => b.title === title);
+        if (!book) return;
+        
+        document.getElementById("modal-title").innerText = book.title;
+        document.getElementById("modal-author").innerText = `by ${book.author}`;
+        document.getElementById("modal-year").innerText = `Published: ${book.year}`;
+        document.getElementById("modal-description").innerText = book.description;
+        
+        // Badges
+        const badges = document.getElementById("modal-badges");
+        badges.innerHTML = `
+            ${book.is_ai ? '<span class="badge ai">🤖 AI Topic</span>' : ''}
+            <span class="badge ${book.is_on_kindle ? 'kindle' : 'onedrive'}">
+                ${book.is_on_kindle ? '📱 On Kindle' : '💾 OneDrive Only'}
+            </span>
+        `;
+        
+        // Subjects
+        const tagsDiv = document.getElementById("modal-subjects");
+        const subjectsSection = document.getElementById("modal-subjects-section");
+        if (book.subjects && book.subjects.length > 0) {
+            tagsDiv.innerHTML = book.subjects.map(s => `<span class="tag">${s}</span>`).join('');
+            subjectsSection.style.display = "block";
+        } else {
+            subjectsSection.style.display = "none";
+        }
+        
+        // Paths & Actions
+        const pathSection = document.getElementById("modal-path-section");
+        const modalActions = document.getElementById("modal-actions");
+        modalActions.innerHTML = "";
+        
+        if (book.onedrive_path) {
+            const baseOneDrive = "C:\\Users\\admin-beats\\OneDrive\\03_Personal_Archive\\eBooks";
+            const fullLocalPath = `${baseOneDrive}\\${book.onedrive_path.replace(/\//g, '\\')}`;
+            
+            document.getElementById("modal-path-text").innerText = fullLocalPath;
+            activePathToCopy = fullLocalPath;
+            pathSection.style.display = "block";
+            
+            // Add Open Local Link action (if browser permits, e.g. run locally)
+            const fileUrl = `file:///${baseOneDrive.replace(/\\/g, '/')}/${book.onedrive_path}`;
+            modalActions.innerHTML += `
+                <a href="${fileUrl}" class="btn" target="_blank">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                    Open File Locally
+                </a>
+            `;
+        } else {
+            pathSection.style.display = "none";
+            activePathToCopy = "";
+        }
+        
+        // Add OneDrive folder browsing action
+        const onedriveSharedLink = document.getElementById("onedrive-shared-btn").getAttribute("href");
+        modalActions.innerHTML += `
+            <a href="${onedriveSharedLink}" class="btn btn-primary" target="_blank" style="text-decoration: none;">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4 4 0 003 15z"/></svg>
+                Browse Shared Folder
+            </a>
+        `;
+        
+        document.getElementById("details-modal").style.display = "flex";
+    }
+
+    // Close Modal
+    function closeModal(event) {
+        document.getElementById("details-modal").style.display = "none";
+    }
+
+    // Helper functions
+    function escapeHtml(text) {
+        if (!text) return "";
+        return text
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+</script>
+</body>
+</html>
