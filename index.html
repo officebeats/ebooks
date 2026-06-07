@@ -3,30 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>eBooks Vault & Recommendations</title>
+    <title>BeatsPM Ebook Library</title>
     
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
     
     <style>
         :root {
-            --bg-color: #0b0f19;
-            --surface-color: #111827;
-            --card-bg: rgba(17, 24, 39, 0.6);
+            --bg-color: #050505;
+            --surface-color: #0a0a0a;
+            --card-bg: rgba(30, 30, 32, 0.45);
             --border-color: rgba(255, 255, 255, 0.08);
-            --text-primary: #f3f4f6;
-            --text-secondary: #9ca3af;
-            --text-muted: #6b7280;
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0a0;
+            --text-muted: #666666;
             
-            --primary-accent: #a855f7; /* Neon Purple */
-            --secondary-accent: #3b82f6; /* Neon Blue */
+            --primary-accent: #00d28d; /* BCG Green (Dark) */
+            --secondary-accent: #009270; /* BCG Green (Secondary) */
             --success-color: #10b981; /* Emerald */
             --warning-color: #f59e0b; /* Amber */
             
-            --glow-purple: 0 0 15px rgba(168, 85, 247, 0.4);
-            --glow-blue: 0 0 15px rgba(59, 130, 246, 0.4);
+            --glow-green: 0 0 15px rgba(0, 210, 141, 0.4);
             
             --glass-blur: blur(16px);
         }
@@ -38,14 +37,15 @@
         }
 
         body {
-            font-family: 'Outfit', sans-serif;
+            font-family: 'Inter', sans-serif;
             background-color: var(--bg-color);
             color: var(--text-primary);
             min-height: 100vh;
             overflow-x: hidden;
             background-image: 
-                radial-gradient(circle at 10% 20%, rgba(168, 85, 247, 0.15) 0%, transparent 40%),
-                radial-gradient(circle at 90% 80%, rgba(59, 130, 246, 0.15) 0%, transparent 40%);
+                radial-gradient(circle at 10% 20%, rgba(0, 146, 112, 0.12), transparent 45%),
+                radial-gradient(circle at 90% 80%, rgba(0, 146, 112, 0.12), transparent 45%),
+                radial-gradient(circle at 50% 50%, rgba(0, 0, 0, 0.04), transparent 60%);
             background-attachment: fixed;
         }
 
@@ -90,13 +90,14 @@
         }
 
         h1 {
-            font-size: 1.8rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, #f3f4f6 0%, #a855f7 50%, #3b82f6 100%);
+            font-family: 'Instrument Serif', Georgia, serif;
+            font-size: 2.2rem;
+            font-weight: 400;
+            background: linear-gradient(135deg, #ffffff 0%, var(--primary-accent) 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             margin-bottom: 0.1rem;
-            letter-spacing: -0.04em;
+            letter-spacing: -0.01em;
         }
 
         .subtitle {
@@ -141,8 +142,8 @@
             font-weight: 600;
         }
 
-        .stat-val.purple { color: #d8b4fe; }
-        .stat-val.blue { color: #93c5fd; }
+        .stat-val.purple { color: var(--primary-accent); }
+        .stat-val.blue { color: #8ef7d3; }
         .stat-val.green { color: #6ee7b7; }
 
         /* Quick Links */
@@ -154,9 +155,9 @@
         }
 
         .btn-link {
-            background: rgba(168, 85, 247, 0.1);
-            border: 1px solid rgba(168, 85, 247, 0.2);
-            color: #d8b4fe;
+            background: rgba(0, 210, 141, 0.1);
+            border: 1px solid rgba(0, 210, 141, 0.2);
+            color: #8ef7d3;
             text-decoration: none;
             padding: 0.35rem 0.75rem;
             border-radius: 6px;
@@ -170,9 +171,9 @@
         }
 
         .btn-link:hover {
-            background: rgba(168, 85, 247, 0.2);
+            background: rgba(0, 210, 141, 0.2);
             border-color: var(--primary-accent);
-            box-shadow: var(--glow-purple);
+            box-shadow: var(--glow-green);
             transform: translateY(-1px);
         }
 
@@ -198,7 +199,7 @@
             cursor: pointer;
             position: relative;
             transition: color 0.3s ease;
-            font-family: 'Outfit', sans-serif;
+            font-family: 'Inter', sans-serif;
         }
 
         .tab-btn:hover {
@@ -274,7 +275,7 @@
             border-radius: 6px;
             padding: 0.45rem 0.75rem 0.45rem 2rem;
             color: var(--text-primary);
-            font-family: 'Outfit', sans-serif;
+            font-family: 'Inter', sans-serif;
             font-size: 0.85rem;
             outline: none;
             transition: all 0.3s ease;
@@ -282,7 +283,7 @@
 
         .search-input:focus {
             border-color: var(--primary-accent);
-            box-shadow: 0 0 6px rgba(168, 85, 247, 0.2);
+            box-shadow: 0 0 6px rgba(0, 210, 141, 0.2);
             background: rgba(255, 255, 255, 0.08);
         }
 
@@ -303,7 +304,7 @@
             border-radius: 6px;
             padding: 0.45rem 1.75rem 0.45rem 0.75rem;
             color: var(--text-primary);
-            font-family: 'Outfit', sans-serif;
+            font-family: 'Inter', sans-serif;
             font-size: 0.85rem;
             outline: none;
             cursor: pointer;
@@ -314,10 +315,10 @@
             background-position: right 0.5rem center;
             background-size: 1rem;
         }
-
+ 
         .select-input:focus {
             border-color: var(--secondary-accent);
-            box-shadow: 0 0 6px rgba(59, 130, 246, 0.2);
+            box-shadow: 0 0 6px rgba(0, 146, 112, 0.2);
         }
 
         /* Table Layout (Modern & Compact) */
@@ -415,9 +416,9 @@
         }
 
         .badge.ai {
-            background: rgba(168, 85, 247, 0.15);
-            color: #d8b4fe;
-            border: 1px solid rgba(168, 85, 247, 0.3);
+            background: rgba(0, 210, 141, 0.15);
+            color: #8ef7d3;
+            border: 1px solid rgba(0, 210, 141, 0.3);
         }
 
         .badge.non-ai {
@@ -433,9 +434,9 @@
         }
 
         .badge.onedrive {
-            background: rgba(59, 130, 246, 0.15);
-            color: #93c5fd;
-            border: 1px solid rgba(59, 130, 246, 0.3);
+            background: rgba(0, 210, 141, 0.1);
+            color: #8ef7d3;
+            border: 1px solid rgba(0, 210, 141, 0.25);
         }
 
         .book-title-cell {
@@ -461,7 +462,7 @@
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid var(--border-color);
             color: var(--text-primary);
-            font-family: 'Outfit', sans-serif;
+            font-family: 'Inter', sans-serif;
             font-size: 0.8rem;
             font-weight: 500;
             padding: 0.35rem 0.65rem;
@@ -487,7 +488,7 @@
 
         .btn.btn-primary:hover {
             opacity: 0.95;
-            box-shadow: var(--glow-purple);
+            box-shadow: var(--glow-green);
         }
 
         /* Checkbox tally for recommendations */
@@ -520,7 +521,7 @@
         .checkbox-container.checked .custom-checkbox {
             background: var(--primary-accent);
             border-color: var(--primary-accent);
-            box-shadow: var(--glow-purple);
+            box-shadow: var(--glow-green);
         }
 
         .custom-checkbox svg {
@@ -621,8 +622,9 @@
         }
 
         .modal-title {
-            font-size: 1.8rem;
-            font-weight: 700;
+            font-family: 'Instrument Serif', Georgia, serif;
+            font-size: 2.2rem;
+            font-weight: 400;
             margin-bottom: 0.5rem;
             line-height: 1.2;
             color: var(--text-primary);
@@ -821,7 +823,7 @@
 <div class="container">
     <header>
         <div class="header-left">
-            <h1>eBooks Vault</h1>
+            <h1>BeatsPM Ebook Library</h1>
             <div class="subtitle">Personal archive index & catalog reference portal</div>
         </div>
         
@@ -852,7 +854,7 @@
                     <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4 4 0 003 15z"/></svg>
                     Browse OneDrive
                 </a>
-                <a href="https://openlibrary.org" class="btn-link" target="_blank" style="background: rgba(59, 130, 246, 0.1); border-color: rgba(59, 130, 246, 0.2); color: #93c5fd;">
+                <a href="https://openlibrary.org" class="btn-link" target="_blank" style="background: rgba(0, 146, 112, 0.1); border-color: rgba(0, 146, 112, 0.2); color: #8ef7d3;">
                     <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                     Open Library
                 </a>
