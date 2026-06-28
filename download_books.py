@@ -88,9 +88,9 @@ def handle_download_local(selected_books, onedrive_root_path, dest_dir):
 def handle_download_kindle(selected_books, dest_dir):
     os.makedirs(dest_dir, exist_ok=True)
     
-    ip = input("Enter Kindle IP Address [default: 192.168.68.79]: ").strip()
+    ip = input("Enter Kindle IP Address [default: 192.168.68.82]: ").strip()
     if not ip:
-        ip = "192.168.68.79"
+        ip = "192.168.68.82"
         
     port_input = input("Enter Kindle SSH Port [default: 2222]: ").strip()
     port = int(port_input) if port_input else 2222

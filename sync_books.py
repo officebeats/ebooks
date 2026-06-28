@@ -9,7 +9,7 @@ import sys
 import argparse
 
 # Configurations
-KINDLE_IP = "192.168.68.79"
+KINDLE_IP = "192.168.68.82"
 KINDLE_PORT = 2222
 KINDLE_USER = "root"
 KINDLE_PASSWORD = ""
@@ -370,6 +370,48 @@ def main():
         kindle_epubs = [line.strip() for line in stdout.read().decode('utf-8', errors='ignore').splitlines() if line.strip()]
         print(f"Found {len(kindle_epubs)} epubs on Kindle.")
         
+        # Deduplicate books already on Kindle
+        kindle_norm_groups = {}
+        for p in kindle_epubs:
+            norm = normalize_filename(os.path.basename(p))
+            if norm not in kindle_norm_groups:
+                kindle_norm_groups[norm] = []
+            kindle_norm_groups[norm].append(p)
+            
+        deduped_kindle_epubs = []
+        for norm, paths in kindle_norm_groups.items():
+            if len(paths) > 1:
+                # Sort paths to keep the best one (shorter, no copy/number suffixes)
+                def get_path_priority(path):
+                    basename = os.path.basename(path).lower()
+                    score = 0
+                    if re.search(r'\(\d+\)', basename):
+                        score += 10
+                    if re.search(r'_\d+', basename):
+                        score += 5
+                    if 'copy' in basename:
+                        score += 20
+                    score += len(basename) * 0.01
+                    return score
+                
+                paths.sort(key=get_path_priority)
+                keep_path = paths[0]
+                deduped_kindle_epubs.append(keep_path)
+                
+                print(f"[Dedupe] Found {len(paths)} versions of '{norm}'. Keeping '{os.path.basename(keep_path)}'")
+                for remove_path in paths[1:]:
+                    if not dry_run:
+                        try:
+                            sftp.remove(remove_path)
+                            print(f"  Deleted duplicate from Kindle: {os.path.basename(remove_path)}")
+                        except Exception as ex:
+                            print(f"  Failed to delete duplicate {os.path.basename(remove_path)}: {ex}")
+                    else:
+                        print(f"  [Dry Run] Would delete duplicate from Kindle: {os.path.basename(remove_path)}")
+            else:
+                deduped_kindle_epubs.append(paths[0])
+        kindle_epubs = deduped_kindle_epubs
+        
     except Exception as e:
         print(f"Could not connect to Kindle: {e}")
         print("Proceeding with local-only metadata compilation...")
@@ -440,10 +482,32 @@ def main():
             print(f"Found {len(queue_files)} files in SendToKindle queue.")
             free_space = get_kindle_free_space(ssh)
             
+            # Map normalized names of current kindle_epubs to prevent duplicates
+            kindle_norm_names = {normalize_filename(os.path.basename(p)) for p in kindle_epubs}
+            
             for q_file in queue_files:
                 basename = os.path.basename(q_file)
-                filesize = os.path.getsize(q_file)
+                norm_name = normalize_filename(basename)
                 
+                if norm_name in kindle_norm_names:
+                    print(f"Skipping upload of {basename}: book already exists on Kindle.")
+                    # Move to OneDrive archive since we already have it on Kindle
+                    archive_path = os.path.join(ONEDRIVE_EPUB_DIR, basename)
+                    if not dry_run:
+                        try:
+                            if os.path.exists(archive_path):
+                                os.remove(q_file)
+                            else:
+                                os.rename(q_file, archive_path)
+                                local_files.append(archive_path)
+                            print(f"  Archived {basename} to OneDrive.")
+                        except Exception as ex:
+                            print(f"  Failed to archive duplicate queue file {basename}: {ex}")
+                    else:
+                        print(f"  [Dry Run] Would skip upload of {basename} and archive it to OneDrive.")
+                    continue
+                
+                filesize = os.path.getsize(q_file)
                 if free_space is not None and free_space < filesize + (5 * 1024 * 1024): # Keep 5MB safety buffer
                     print(f"Skipping {basename}: Not enough storage space on Kindle.")
                     continue
@@ -461,6 +525,8 @@ def main():
                         else:
                             os.rename(q_file, archive_path)
                             local_files.append(archive_path)
+                        # Update kindle_epubs so it registers in the database update step
+                        kindle_epubs.append(dest_path)
                     else:
                         print(f"  [Dry Run] Would upload {basename} and archive it.")
                         
