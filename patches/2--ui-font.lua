@@ -62,7 +62,7 @@ function UIFont:setFont(name)
     local current_name = self:getSetting()
     if name ~= current_name then
         name = name or current_name
-        if not self.fonts[name] then name = DEFAULT end
+        if not self.fonts[name] then name = self.font_list[1] or "Noto Sans" end
         for font, typ in pairs(self.to_be_replaced) do
             Font.fontmap[font] = self.fonts[name][typ]
         end
