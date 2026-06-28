@@ -1,0 +1,14 @@
+{
+  "older": {
+    "ip": "IP_ADDRESS_HERE",
+    "port": 2222,
+    "user": "root",
+    "password": ""
+  },
+  "newer": {
+    "ip": "IP_ADDRESS_HERE",
+    "port": 2222,
+    "user": "root",
+    "password": ""
+  }
+}

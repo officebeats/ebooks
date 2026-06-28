@@ -311,6 +311,17 @@ def test_connection(ip, port, user, password):
         print(f"Failed to connect on port {port}: {e}")
         return None
 
+def load_kindle_hosts():
+    """Load Kindle hosts config from local JSON if it exists."""
+    hosts_path = "kindle_hosts.json"
+    if os.path.exists(hosts_path):
+        try:
+            with open(hosts_path, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception as e:
+            print(f"Error loading {hosts_path}: {e}")
+    return {}
+
 def build_connection(ip, port, user, password):
     """Build SSH connection trying default ports 2222 and 22."""
     if port:
@@ -326,8 +337,13 @@ def main():
     if hasattr(sys.stdout, 'reconfigure'):
         sys.stdout.reconfigure(encoding='utf-8')
 
+    hosts_config = load_kindle_hosts()
+    default_ip = DEFAULT_KINDLE_IP
+    if "older" in hosts_config:
+        default_ip = hosts_config["older"].get("ip", DEFAULT_KINDLE_IP)
+
     parser = argparse.ArgumentParser(description="Deploy 'beats' KOReader configuration to a Kindle")
-    parser.add_argument("--ip", default=DEFAULT_KINDLE_IP, help=f"Kindle IP address (default: {DEFAULT_KINDLE_IP})")
+    parser.add_argument("--ip", default=default_ip, help=f"Kindle IP address or host nickname (default: {default_ip})")
     parser.add_argument("--port", type=int, help="Kindle SSH port (tries 2222 and 22 by default)")
     parser.add_argument("--user", default=DEFAULT_KINDLE_USER, help=f"Kindle SSH user (default: {DEFAULT_KINDLE_USER})")
     parser.add_argument("--password", default=DEFAULT_KINDLE_PASSWORD, help="Kindle SSH password")
@@ -335,6 +351,16 @@ def main():
     
     args = parser.parse_args()
     dry_run = args.dry_run
+    
+    # Resolve from hosts config if nickname is used
+    for nickname in [args.ip, f"{args.ip}_kindle"]:
+        if nickname in hosts_config:
+            device = hosts_config[nickname]
+            args.ip = device.get("ip", args.ip)
+            args.port = device.get("port", args.port) or args.port
+            args.user = device.get("user", args.user) or args.user
+            args.password = device.get("password", args.password) or args.password
+            break
     
     print("=== Deploying 'beats' Kindle KOReader Configuration ===")
     
