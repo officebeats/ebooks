@@ -9,6 +9,7 @@ import argparse
 import sqlite3
 import io
 import paramiko
+import re
 
 # Configurations
 DEFAULT_KINDLE_IP = "192.168.68.82"
@@ -34,6 +35,11 @@ PLUGINS_TO_INSTALL = {
         "repo": "doctorhetfield-cmd/simpleui.koplugin",
         "target_folder": "simpleui.koplugin",
         "url": "https://github.com/doctorhetfield-cmd/simpleui.koplugin/archive/refs/heads/main.zip"
+    },
+    "simpleui_ext": {
+        "repo": "omer-faruq/simpleui_ext.koplugin",
+        "target_folder": "simpleui_ext.koplugin",
+        "url": "https://github.com/omer-faruq/simpleui_ext.koplugin/archive/refs/heads/main.zip"
     },
     "ReadMastery": {
         "repo": "Lalocaballero/readmastery.koplugin",
@@ -322,6 +328,56 @@ def load_kindle_hosts():
             print(f"Error loading {hosts_path}: {e}")
     return {}
 
+def configure_settings_reader_lua(sftp, dry_run=False):
+    """Ensure SimpleUI and cover screensaver defaults are set in settings.reader.lua."""
+    remote_path = "/mnt/us/koreader/settings.reader.lua"
+    if dry_run:
+        print(f"  [Dry Run] Would configure settings.reader.lua to start with homescreen_simpleui and screensaver_type cover")
+        return
+        
+    try:
+        # Download settings.reader.lua
+        fd, local_temp = tempfile.mkstemp()
+        os.close(fd)
+        try:
+            sftp.get(remote_path, local_temp)
+        except Exception:
+            # File doesn't exist, start with empty table
+            with open(local_temp, "w", encoding="utf-8") as f:
+                f.write("return {\n}")
+                
+        with open(local_temp, "r", encoding="utf-8") as f:
+            content = f.read()
+            
+        # Ensure homescreen_simpleui is start_with
+        if '["start_with"]' in content:
+            content = re.sub(r'\["start_with"\]\s*=\s*"[^"]*"', '["start_with"] = "homescreen_simpleui"', content)
+        else:
+            content = content.replace("return {", 'return {\n    ["start_with"] = "homescreen_simpleui",')
+            
+        # Ensure screensaver_type is cover
+        if '["screensaver_type"]' in content:
+            content = re.sub(r'\["screensaver_type"\]\s*=\s*"[^"]*"', '["screensaver_type"] = "cover"', content)
+        else:
+            content = content.replace("return {", 'return {\n    ["screensaver_type"] = "cover",')
+            
+        # Ensure migrated flag is true
+        if '["simpleui_userdata_migrated_v1"]' not in content:
+            content = content.replace("return {", 'return {\n    ["simpleui_userdata_migrated_v1"] = true,')
+            
+        with open(local_temp, "w", encoding="utf-8") as f:
+            f.write(content)
+            
+        # Upload back
+        sftp.put(local_temp, remote_path)
+        sftp.chmod(remote_path, 0o777)
+        print("  Successfully configured settings.reader.lua defaults.")
+    except Exception as e:
+        print(f"  Warning: Failed to configure settings.reader.lua: {e}")
+    finally:
+        if os.path.exists(local_temp):
+            os.remove(local_temp)
+
 def build_connection(ip, port, user, password):
     """Build SSH connection trying default ports 2222 and 22."""
     if port:
@@ -539,8 +595,11 @@ def main():
                     print(f"  Deployed icon -> {remote_icon_dest}")
         else:
             print(f"  [Dry Run] Would deploy corner SVGs to {REMOTE_ICONS_DIR}/")
+        # 10. Configure settings.reader.lua defaults (SimpleUI & Screensaver Cover)
+        print("\n[Deploy] Configuring settings.reader.lua defaults...")
+        configure_settings_reader_lua(sftp, dry_run=dry_run)
             
-        # 10. Restart KOReader
+        # 11. Restart KOReader
         if not dry_run:
             print("\n[Deploy] Restarting KOReader to apply all updates...")
             ssh.exec_command("killall reader.lua")
