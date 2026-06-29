@@ -10,5 +10,11 @@
     "port": 2222,
     "user": "root",
     "password": ""
+  },
+  "white": {
+    "ip": "IP_ADDRESS_HERE",
+    "port": 2222,
+    "user": "root",
+    "password": ""
   }
 }
