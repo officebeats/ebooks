@@ -4,6 +4,8 @@ import hashlib
 import argparse
 import paramiko
 
+import json
+
 # Configurations
 DEFAULT_KINDLE_IP = "192.168.68.70"
 DEFAULT_KINDLE_PORT = 2222
@@ -11,6 +13,17 @@ DEFAULT_KINDLE_USER = "root"
 DEFAULT_KINDLE_PASSWORD = ""
 LOCAL_DIR = r"C:\Users\admin-beats\OneDrive\03_Personal_Archive\eBooks\Epubs"
 REMOTE_BOOKS_DIR = "/mnt/us/epubs"
+
+def load_kindle_hosts():
+    """Load Kindle hosts config from local JSON if it exists."""
+    hosts_path = "kindle_hosts.json"
+    if os.path.exists(hosts_path):
+        try:
+            with open(hosts_path, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception as e:
+            print(f"Error loading {hosts_path}: {e}")
+    return {}
 
 def get_file_md5(filepath):
     """Calculate MD5 hash of a local file in chunks."""
@@ -72,8 +85,13 @@ def main():
     if hasattr(sys.stdout, 'reconfigure'):
         sys.stdout.reconfigure(encoding='utf-8')
 
+    hosts_config = load_kindle_hosts()
+    default_ip = DEFAULT_KINDLE_IP
+    if "white" in hosts_config:
+        default_ip = hosts_config["white"].get("ip", DEFAULT_KINDLE_IP)
+
     parser = argparse.ArgumentParser(description="Sync missing books from local folder back to Kindle")
-    parser.add_argument("--ip", default=DEFAULT_KINDLE_IP, help=f"Kindle IP address (default: {DEFAULT_KINDLE_IP})")
+    parser.add_argument("--ip", default=default_ip, help=f"Kindle IP address or host nickname (default: {default_ip})")
     parser.add_argument("--port", type=int, help="Kindle SSH port")
     parser.add_argument("--user", default=DEFAULT_KINDLE_USER, help=f"Kindle SSH user (default: {DEFAULT_KINDLE_USER})")
     parser.add_argument("--password", default=DEFAULT_KINDLE_PASSWORD, help="Kindle SSH password")
@@ -81,6 +99,16 @@ def main():
     
     args = parser.parse_args()
     dry_run = args.dry_run
+    
+    # Resolve from hosts config if nickname is used
+    for nickname in [args.ip, f"{args.ip}_kindle"]:
+        if nickname in hosts_config:
+            device = hosts_config[nickname]
+            args.ip = device.get("ip", args.ip)
+            args.port = device.get("port", args.port) or args.port
+            args.user = device.get("user", args.user) or args.user
+            args.password = device.get("password", args.password) or args.password
+            break
     
     print("=== Syncing Local Books Delta to Kindle ===")
     
@@ -104,6 +132,9 @@ def main():
     sftp = ssh.open_sftp()
     
     try:
+        # Ensure remote directory exists
+        ssh.exec_command(f"mkdir -p {REMOTE_BOOKS_DIR}")
+        
         # 3. Find EPUBs on Kindle and calculate their MD5s
         print("\nScanning Kindle for existing books...")
         find_cmd = f'find {REMOTE_BOOKS_DIR} -name "*.epub" 2>/dev/null'
