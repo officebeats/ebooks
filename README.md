@@ -332,3 +332,20 @@ Total books cataloged: **313**
 | ❌ No | 💾 OneDrive Only | **Why Has Nobody Told Me This Before?**<br>_by Julie Smith_ | 2022 | Health & Fitness, Mental Health, Psychology, Interpersonal Relations, Emotions, Family & Relationships, Dysfunctional Families, Self-Help, Personal Growth, Happiness, General, Self-Esteem | Over 1 million copies sold worldwide!International Bestseller“Smart, insightful, and warm. Dr. Julie is both the expert and wise friend w... | [Local File](file:///C:/Users/admin-beats/OneDrive/03_Personal_Archive/eBooks/Epubs/Why Has Nobody Told Me This Before_ - Julie Smith (274).epub) / [Cloud Download](https://api.onedrive.com/v1.0/shares/u!aHR0cHM6Ly8xZHJ2Lm1zL3UvYy9lNDQyN2MwMmZiMDY3MTIyL0lRRG9vRW52VnhsX1M2bndOeFp3V1BMaUFZaF9wT2dCY1N5Rmx0QTlFYVBqbHNF/root/content) |
 | 🤖 Yes | 📱 Kindle & 💾 OneDrive | **Why Nobody Understands Quantum Physics: And Everyone Needs to Know Something About It**<br>_by Frank Verstraete_ | 2026 | health revolution, care, social, adopting, patient, Science, gas, Quantum Theory, Study & Teaching, future, cloud, guardrails, Pandemic, natural human intelligence, genetic, determinants, tequity, age, healthcare, calamity, data, telehealth, creating value, artificial intelligence, code, History, retailers, Physics, new market, leadership, execution, health infonomics, aspiration, intelligent, Experiments & Projects, moonshot, primer | The international bestseller 'Ambitious . . . pleasingly full of cutting-edge topics' - New Scientist 'A physics book unlike any other. T... | [Local File](file:///C:/Users/admin-beats/OneDrive/03_Personal_Archive/eBooks/Epubs/Why Nobody Understands Quantum Physics_ And Everyone Needs to Know Something About It - Frank Verstraete.epub) / [Cloud Download](https://api.onedrive.com/v1.0/shares/u!aHR0cHM6Ly8xZHJ2Lm1zL3UvYy9lNDQyN2MwMmZiMDY3MTIyL0lRQ3F4eU1PVzl6TlFMV253V1dYdFE4S0FSeERGYWNNaEhqZUZPS3RuMEtBX3Uw/root/content) |
 | 🤖 Yes | 💾 OneDrive Only | **Your AI Roadmap**<br>_by Joan Palmiter Bajorek_ | 2024 | _ | No synopsis available. | [Local File](file:///C:/Users/admin-beats/OneDrive/03_Personal_Archive/eBooks/Epubs/Your AI Roadmap Actions to Expand Your Career, Money, and Joy (Joan Palmiter Bajorek) (z-library.sk, 1lib.sk, z-lib.sk).epub) / [Cloud Download](https://api.onedrive.com/v1.0/shares/u!aHR0cHM6Ly8xZHJ2Lm1zL3UvYy9lNDQyN2MwMmZiMDY3MTIyL0lRQldxUDc0NHVfalRMV2labTdldlh2TkFjcEVmcGtpUmlEMG1aTkxqeUhJY0dJ/root/content) |
+
+## Self-Hosted Ebook Reading Platform
+
+You can now manage and read your OneDrive epubs using the self-hosted **[BookOrbit](https://bookorbit.app)** platform. We have included BookOrbit as a submodule in this repository, pre-configured to mount your OneDrive library.
+
+### Quick Start
+To launch BookOrbit, simply run:
+`powershell
+.\start_bookorbit.ps1
+`
+
+This helper script will:
+1. Automatically scaffold the necessary .env file with secure random keys.
+2. Point BookOrbit's storage to your OneDrive Epubs folder.
+3. Start the Docker containers in the background.
+
+Once started, open [http://localhost:3000](http://localhost:3000) and use the **setup bootstrap token** provided by the script to complete your first-time setup.

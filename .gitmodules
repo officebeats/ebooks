@@ -1,0 +1,3 @@
+[submodule "bookorbit"]
+	path = bookorbit
+	url = https://github.com/bookorbit/bookorbit
