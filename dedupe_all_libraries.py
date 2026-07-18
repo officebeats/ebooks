@@ -3,8 +3,18 @@ import re
 import argparse
 import paramiko
 
+import json
+
 # Configurations
-KINDLE_IPS = ["192.168.68.82", "192.168.68.70"]
+def get_kindle_ips():
+    try:
+        with open("kindle_hosts.json", "r") as f:
+            data = json.load(f)
+            return [device["ip"] for device in data.values()]
+    except Exception:
+        return ["192.168.68.82", "192.168.68.70"]
+
+KINDLE_IPS = get_kindle_ips()
 DEFAULT_KINDLE_PORT = 2222
 DEFAULT_KINDLE_USER = "root"
 DEFAULT_KINDLE_PASSWORD = ""

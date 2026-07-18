@@ -629,8 +629,17 @@ def main():
             sftp.put(temp_menu, "/mnt/us/extensions/koreader/menu.json")
             os.remove(temp_menu)
             print("  Custom KUAL menu.json deployed (Forces No Framework).")
+            
+            # Force Central TimeZone directly into KOReader launch script
+            stdin, stdout, stderr = ssh.exec_command("cat /mnt/us/koreader/koreader.sh")
+            koreader_sh_content = stdout.read().decode('utf-8')
+            if koreader_sh_content and "export TZ=" not in koreader_sh_content:
+                new_sh = koreader_sh_content.replace("#!/bin/sh", "#!/bin/sh\nexport TZ=CST6CDT")
+                with sftp.file('/mnt/us/koreader/koreader.sh', 'w') as f:
+                    f.write(new_sh)
+                print("  Injected Central TimeZone directly into koreader.sh")
         else:
-            print("  [Dry Run] Would deploy KUAL menu.json for 1-tap No Framework.")
+            print("  [Dry Run] Would deploy KUAL menu.json and inject TZ into koreader.sh.")
             
         # 9. Upload Icons
         print("\n[Deploy] Uploading corner SVG icons...")
