@@ -650,12 +650,19 @@ def main():
         # 9.5 Force Time Sync from Deployment Machine
         print("\n[Deploy] Force syncing Kindle system time...")
         if not dry_run:
+            # Block native Amazon NTP daemons from overriding our manual local time
+            ssh.exec_command("mntroot rw")
+            ssh.exec_command("if [ -f /usr/sbin/ntpd ]; then mv /usr/sbin/ntpd /usr/sbin/ntpd.bak; fi")
+            ssh.exec_command("if [ -f /usr/bin/ntpdate ]; then mv /usr/bin/ntpdate /usr/bin/ntpdate.bak; fi")
+            ssh.exec_command("killall ntpd ntpdate 2>/dev/null")
+            ssh.exec_command("mntroot ro")
+            
             now = datetime.datetime.now()
             date_str = now.strftime("%Y-%m-%d %H:%M:%S")
             ssh.exec_command(f"date -s '{date_str}'; hwclock -w 2>/dev/null")
-            print(f"  Successfully forced system time to {date_str}")
+            print(f"  Successfully disabled native NTP and forced system time to {date_str}")
         else:
-            print("  [Dry Run] Would forcefully set Kindle time via date -s command.")
+            print("  [Dry Run] Would block native NTP and forcefully set Kindle time via date -s command.")
 
         # 10. Configure settings.reader.lua defaults (SimpleUI & Screensaver Cover)
         print("\n[Deploy] Configuring settings.reader.lua defaults...")
