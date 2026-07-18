@@ -44,4 +44,7 @@ function AutoLocalTimeSync:onWakeUp()
     end)
 end
 
+-- Run once on startup
+AutoLocalTimeSync:onWakeUp()
+
 return AutoLocalTimeSync

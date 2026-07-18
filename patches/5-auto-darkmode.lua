@@ -59,4 +59,11 @@ function AutoDarkMode:applyTheme()
     end
 end
 
+-- Run once on startup, then every 5 minutes to catch sun changes
+local function loopTheme()
+    AutoDarkMode:applyTheme()
+    UIManager:scheduleIn(300, loopTheme)
+end
+UIManager:scheduleIn(5, loopTheme)
+
 return AutoDarkMode
