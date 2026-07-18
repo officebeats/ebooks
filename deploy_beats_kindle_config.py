@@ -645,6 +645,17 @@ def main():
                     print(f"  Deployed icon -> {remote_icon_dest}")
         else:
             print(f"  [Dry Run] Would deploy corner SVGs to {REMOTE_ICONS_DIR}/")
+
+        # 9.5 Force Time Sync from Deployment Machine
+        print("\n[Deploy] Force syncing Kindle system time...")
+        if not dry_run:
+            now = datetime.datetime.now()
+            date_str = now.strftime("%Y-%m-%d %H:%M:%S")
+            ssh.exec_command(f"date -s '{date_str}'; hwclock -w 2>/dev/null")
+            print(f"  Successfully forced system time to {date_str}")
+        else:
+            print("  [Dry Run] Would forcefully set Kindle time via date -s command.")
+
         # 10. Configure settings.reader.lua defaults (SimpleUI & Screensaver Cover)
         print("\n[Deploy] Configuring settings.reader.lua defaults...")
         configure_settings_reader_lua(sftp, dry_run=dry_run)
