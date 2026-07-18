@@ -41,15 +41,10 @@ PLUGINS_TO_INSTALL = {
         "target_folder": "simpleui_ext.koplugin",
         "url": "https://github.com/omer-faruq/simpleui_ext.koplugin/archive/refs/heads/main.zip"
     },
-    "ReadMastery": {
-        "repo": "Lalocaballero/readmastery.koplugin",
-        "target_folder": "ReadMastery.koplugin",
-        "url": "https://github.com/Lalocaballero/readmastery.koplugin/releases/download/v1.3.1/ReadMastery.koplugin.zip"
-    },
+
     "koassistant": {
         "repo": "zeeyado/koassistant.koplugin",
-        "target_folder": "koassistant.koplugin",
-        "url": "https://github.com/zeeyado/koassistant.koplugin/releases/download/v0.19.1/koassistant.koplugin.zip"
+        "target_folder": "koassistant.koplugin"
     }
 }
 
@@ -65,6 +60,26 @@ PROJECT_TITLE_SETTINGS = {
     "unified_display_mode": "1",
     "autoscan_on_eject": "0"
 }
+
+LUA_KEEPALIVE_PATCH_CONTENT = """-- Keep SSH alive when plugged in by preventing sleep
+local UIManager = require("ui/uimanager")
+local function pollCharging()
+    local f = io.popen("lipc-get-prop com.lab126.powerd isCharging 2>/dev/null")
+    local is_charging = false
+    if f then
+        local res = f:read("*a")
+        f:close()
+        if res and tonumber(res) == 1 then is_charging = true end
+    end
+    if is_charging then
+        os.execute("lipc-set-prop com.lab126.powerd preventScreenSaver 1")
+    else
+        os.execute("lipc-set-prop com.lab126.powerd preventScreenSaver 0")
+    end
+    UIManager:scheduleIn(30, pollCharging)
+end
+UIManager:scheduleIn(10, pollCharging)
+"""
 
 # Image filter patch to prevent duplicates from cover JPGs/PNGs
 LUA_IMAGE_PATCH_CONTENT = """-- Disable raw image files from being treated as readable books
@@ -424,11 +439,6 @@ def main():
     api_key = get_gemini_api_key()
     if not api_key:
         print("  WARNING: Gemini API Key was not found in environment, .env, or config.json.")
-        try:
-            api_key = input("  Enter your Gemini API key (leave empty to skip configuring KOAssistant): ").strip()
-        except KeyboardInterrupt:
-            print("\nAborted.")
-            sys.exit(1)
             
     if dry_run:
         print(">>> DRY RUN ACTIVE: Local compilation only.")
@@ -504,6 +514,11 @@ def main():
             patch_rounded_path = os.path.join(temp_patches_dir, "2--rounded-corners.lua")
             with open(patch_rounded_path, "w", encoding="utf-8") as f:
                 f.write(LUA_ROUNDED_PATCH_CONTENT)
+                
+            # Fallback C: Keep SSH alive on charge patch
+            patch_keepalive_path = os.path.join(temp_patches_dir, "3-keep-ssh-alive-charging.lua")
+            with open(patch_keepalive_path, "w", encoding="utf-8") as f:
+                f.write(LUA_KEEPALIVE_PATCH_CONTENT)
                 
         print("  Patches prepared successfully.")
         
@@ -581,6 +596,29 @@ def main():
                     print(f"  Deployed patch -> {remote_patch_dest}")
         else:
             print(f"  [Dry Run] Would deploy patches from {temp_patches_dir} to {REMOTE_PATCHES_DIR}/")
+
+        # 8.5 Deploy KUAL No-Framework Auto-Launch Menu
+        print("\n[Deploy] Configuring KUAL No Framework 1-Tap Launch...")
+        kual_menu_json = """{
+  "items": [
+    {
+      "name": "Start KOReader (Max Performance)",
+      "priority": 1,
+      "action": "/mnt/us/koreader/koreader.sh",
+      "params": "--kual --framework_stop"
+    }
+  ]
+}"""
+        if not dry_run:
+            sftp_mkdir_recursive(sftp, "/mnt/us/extensions/koreader")
+            fd, temp_menu = tempfile.mkstemp()
+            with os.fdopen(fd, 'w') as f:
+                f.write(kual_menu_json)
+            sftp.put(temp_menu, "/mnt/us/extensions/koreader/menu.json")
+            os.remove(temp_menu)
+            print("  Custom KUAL menu.json deployed (Forces No Framework).")
+        else:
+            print("  [Dry Run] Would deploy KUAL menu.json for 1-tap No Framework.")
             
         # 9. Upload Icons
         print("\n[Deploy] Uploading corner SVG icons...")
@@ -598,6 +636,33 @@ def main():
         # 10. Configure settings.reader.lua defaults (SimpleUI & Screensaver Cover)
         print("\n[Deploy] Configuring settings.reader.lua defaults...")
         configure_settings_reader_lua(sftp, dry_run=dry_run)
+            
+        # 11. Strict Plugin Baseline Cleanup
+        print("\n[Deploy] Enforcing strict plugin baseline...")
+        KEEP_PLUGINS = {
+            "localsend.koplugin", "koassistant.koplugin", "simpleui.koplugin", "simpleui_ext.koplugin", "SSH.koplugin",
+            "autodim.koplugin", "autostandby.koplugin", "autosuspend.koplugin", "autoturn.koplugin", "autowarmth.koplugin",
+            "batterystat.koplugin", "systemstat.koplugin",
+            "bookshortcuts.koplugin", "calibre.koplugin", "coverbrowser.koplugin", "coverimage.koplugin", "filebrowser.koplugin",
+            "docsettingtweak.koplugin", "exporter.koplugin", "externalkeyboard.koplugin", "gestures.koplugin", "hotkeys.koplugin",
+            "hello.koplugin", "keepalive.koplugin", "perceptionexpander.koplugin", "profiles.koplugin",
+            "newsdownloader.koplugin", "opds.koplugin", "opds_plus.koplugin",
+            "readest.koplugin", "readtimer.koplugin", "timesync.koplugin", "updatesmanager.koplugin",
+            "terminal.koplugin", "texteditor.koplugin", "vocabbuilder.koplugin", "webbrowser.koplugin"
+        }
+        
+        if not dry_run:
+            stdin, stdout, stderr = ssh.exec_command("ls -1 /mnt/us/koreader/plugins")
+            installed_plugins = [line.strip() for line in stdout.read().decode('utf-8').splitlines() if line.strip().endswith(".koplugin")]
+            removed_count = 0
+            for plugin in installed_plugins:
+                if plugin not in KEEP_PLUGINS:
+                    print(f"  Removing unauthorized plugin: {plugin}")
+                    ssh.exec_command(f"rm -rf /mnt/us/koreader/plugins/{plugin}")
+                    removed_count += 1
+            print(f"  Cleanup complete. Removed {removed_count} bloat plugins.")
+        else:
+            print("  [Dry Run] Would enforce strict baseline plugin deletion.")
             
         # 11. Restart KOReader
         if not dry_run:
