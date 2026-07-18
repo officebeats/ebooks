@@ -619,7 +619,7 @@ def main():
                 {
                     "name": "Start KOReader (Max Performance)",
                     "priority": 1,
-                    "action": "bin/koreader.sh",
+                    "action": "bin/koreader-ext.sh",
                     "params": "--kual --framework_stop"
                 }
             ]
