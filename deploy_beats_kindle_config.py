@@ -376,6 +376,18 @@ def configure_settings_reader_lua(sftp, dry_run=False):
         else:
             content = content.replace("return {", 'return {\n    ["screensaver_type"] = "cover",')
             
+        # Fix SimpleUI "modules exceeded area" error by enforcing a strict vertical layout limit
+        safe_modules = {
+            "simpleui_modules_active_tbr": "false",
+            "simpleui_modules_active_new_books": "false",
+            "simpleui_modules_active_collections": "false"
+        }
+        for mod, val in safe_modules.items():
+            if f'["{mod}"]' in content:
+                content = re.sub(rf'\["{mod}"\]\s*=\s*(true|false)', f'["{mod}"] = {val}', content)
+            else:
+                content = content.replace("return {", f'return {{\n    ["{mod}"] = {val},')
+            
         # Ensure migrated flag is true
         if '["simpleui_userdata_migrated_v1"]' not in content:
             content = content.replace("return {", 'return {\n    ["simpleui_userdata_migrated_v1"] = true,')
