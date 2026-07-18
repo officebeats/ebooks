@@ -1,18 +1,18 @@
 {
-  "older": {
-    "ip": "IP_ADDRESS_HERE",
+  "older-floater (192.168.68.82)": {
+    "ip": "192.168.68.82",
     "port": 2222,
     "user": "root",
     "password": ""
   },
-  "newer": {
-    "ip": "IP_ADDRESS_HERE",
+  "newer-backroom (192.168.68.55)": {
+    "ip": "192.168.68.55",
     "port": 2222,
     "user": "root",
     "password": ""
   },
-  "white": {
-    "ip": "IP_ADDRESS_HERE",
+  "white (192.168.68.93)": {
+    "ip": "192.168.68.93",
     "port": 2222,
     "user": "root",
     "password": ""
