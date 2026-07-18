@@ -31,7 +31,7 @@ Execute the deduplication script IMMEDIATELY across the local library and all Ki
 *Note: This script automatically handles both the local folder and the remote Kindles based on its internal configuration.*
 
 ## Step 4: Calculate Deltas (Dry-Run)
-Read `kindle_hosts.json` to get the list of active Kindles (by their nickname keys, e.g. `older-floater (192.168.68.82)`, `newer-backroom (192.168.68.55)`, `white (192.168.68.93)`).
+Read `kindle_hosts.json` to get the list of active Kindles (by their nickname keys, e.g. `older-floater (192.168.68.82)`, `newer-backroom (192.168.68.55)`, `white-bedroom (192.168.68.93)`).
 For **each** Kindle, run the local-to-Kindle sync script in dry-run mode to see what is missing on that device.
 **Command:** `python sync_local_to_kindle.py --ip <kindle_nickname> --dry-run`
 
