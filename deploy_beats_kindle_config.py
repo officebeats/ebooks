@@ -599,6 +599,8 @@ def main():
         # 8. Upload patches
         print("\n[Deploy] Uploading Lua patches...")
         if not dry_run:
+            ssh.exec_command("rm -f /mnt/us/koreader/patches/4-auto-timesync.lua")
+        if not dry_run:
             sftp_mkdir_recursive(sftp, REMOTE_PATCHES_DIR)
             for f in os.listdir(temp_patches_dir):
                 local_patch_path = os.path.join(temp_patches_dir, f)
