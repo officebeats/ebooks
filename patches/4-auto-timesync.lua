@@ -44,7 +44,11 @@ function AutoLocalTimeSync:onWakeUp()
     end)
 end
 
--- Run once on startup
-AutoLocalTimeSync:onWakeUp()
+-- Run once on startup, then loop every 5 minutes to fight the Kindle OS UTC override
+local function loopSync()
+    AutoLocalTimeSync:onWakeUp()
+    UIManager:scheduleIn(300, loopSync)
+end
+UIManager:scheduleIn(5, loopSync)
 
 return AutoLocalTimeSync

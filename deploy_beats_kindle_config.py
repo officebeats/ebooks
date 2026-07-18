@@ -648,21 +648,20 @@ def main():
             print(f"  [Dry Run] Would deploy corner SVGs to {REMOTE_ICONS_DIR}/")
 
         # 9.5 Force Time Sync from Deployment Machine
-        print("\n[Deploy] Force syncing Kindle system time...")
+        print("\n[Deploy] Configuring robust Kindle timezone offsets...")
         if not dry_run:
-            # Block native Amazon NTP daemons from overriding our manual local time
-            ssh.exec_command("mntroot rw")
-            ssh.exec_command("if [ -f /usr/sbin/ntpd ]; then mv /usr/sbin/ntpd /usr/sbin/ntpd.bak; fi")
-            ssh.exec_command("if [ -f /usr/bin/ntpdate ]; then mv /usr/bin/ntpdate /usr/bin/ntpdate.bak; fi")
-            ssh.exec_command("killall ntpd ntpdate 2>/dev/null")
-            ssh.exec_command("mntroot ro")
+            # 1. Restore native Amazon NTP daemons (so the OS clock naturally syncs to true UTC)
+            ssh.exec_command("mntroot rw; mv /usr/sbin/ntpd.bak /usr/sbin/ntpd 2>/dev/null; mv /usr/bin/ntpdate.bak /usr/bin/ntpdate 2>/dev/null; mntroot ro")
             
-            now = datetime.datetime.now()
-            date_str = now.strftime("%Y-%m-%d %H:%M:%S")
-            ssh.exec_command(f"date -s '{date_str}'; hwclock -w 2>/dev/null")
-            print(f"  Successfully disabled native NTP and forced system time to {date_str}")
+            # 2. Tell the Kindle OS to apply Chicago offset to the top-bar lockscreen clock
+            ssh.exec_command("lipc-set-prop com.lab126.wan timezone America/Chicago")
+            
+            # 3. Inject TZ into KOReader's launch script so Lua os.date("*t") evaluates local time flawlessly
+            ssh.exec_command("sed -i '/export LC_ALL/a export TZ=CST6CDT' /mnt/us/koreader/koreader.sh")
+            
+            print("  Successfully shifted all clock contexts to Central Time.")
         else:
-            print("  [Dry Run] Would block native NTP and forcefully set Kindle time via date -s command.")
+            print("  [Dry Run] Would inject TZ and LIPC offsets.")
 
         # 10. Configure settings.reader.lua defaults (SimpleUI & Screensaver Cover)
         print("\n[Deploy] Configuring settings.reader.lua defaults...")
