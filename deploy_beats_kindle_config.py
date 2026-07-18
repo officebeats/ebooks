@@ -614,21 +614,21 @@ def main():
 
         # 8.5 Deploy KUAL No-Framework Auto-Launch Menu
         print("\n[Deploy] Configuring KUAL No Framework 1-Tap Launch...")
-        kual_menu_json = """{
-  "items": [
-    {
-      "name": "Start KOReader (Max Performance)",
-      "priority": 1,
-      "action": "/mnt/us/koreader/koreader.sh",
-      "params": "--kual --framework_stop"
-    }
-  ]
-}"""
+        kual_menu = {
+            "items": [
+                {
+                    "name": "Start KOReader (Max Performance)",
+                    "priority": 1,
+                    "action": "bin/koreader.sh",
+                    "params": "--kual --framework_stop"
+                }
+            ]
+        }
         if not dry_run:
             sftp_mkdir_recursive(sftp, "/mnt/us/extensions/koreader")
             fd, temp_menu = tempfile.mkstemp()
             with os.fdopen(fd, 'w') as f:
-                f.write(kual_menu_json)
+                json.dump(kual_menu, f, indent=2)
             sftp.put(temp_menu, "/mnt/us/extensions/koreader/menu.json")
             os.remove(temp_menu)
             print("  Custom KUAL menu.json deployed (Forces No Framework).")
