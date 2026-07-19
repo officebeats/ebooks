@@ -1,5 +1,6 @@
 -- Performance optimization settings patch for low-memory/single-core Kindles
 local logger = require("logger")
+local Device = require("device")
 
 logger.info("Applying performance optimization tweaks...")
 
@@ -10,7 +11,29 @@ if G_reader_settings:isTrue("debug") or G_reader_settings:isTrue("verbose_debug"
     logger.info("  Debug logging disabled.")
 end
 
--- 2. Ensure heavy background plugins are disabled
+-- 2. Sleeker UI scaling (dynamic DPI set to ~80% of physical DPI)
+local physical_dpi = Device.screen and (Device.screen.dpi or (Device.screen.getDPI and Device.screen:getDPI())) or 300
+if physical_dpi then
+    local sleek_dpi = math.floor(physical_dpi * 0.8)
+    G_reader_settings:saveSetting("screen_dpi", sleek_dpi)
+    logger.info(string.format("  Sleeker UI scale set (Physical: %d -> Sleek: %d)", physical_dpi, sleek_dpi))
+end
+
+-- 3. Crisp Font Contrast Boost (Emboldening)
+G_reader_settings:saveSetting("cr_contrast", 2)
+logger.info("  Font contrast boost enforced.")
+
+-- 4. Enable Snappy Edge Swipes (Left = Brightness, Right = Font Size)
+G_reader_settings:saveSetting("edge_brightness_enabled", true)
+G_reader_settings:saveSetting("edge_fontsize_enabled", true)
+logger.info("  Edge swipes for brightness & font size enabled.")
+
+-- 5. Zero-Animation Page Turns (Instant snappiness)
+G_reader_settings:saveSetting("page_transition", "none")
+G_reader_settings:saveSetting("page_animations_enabled", false)
+logger.info("  Zero-animation page turns enforced.")
+
+-- 6. Ensure heavy background plugins are disabled
 local disabled = G_reader_settings:readSetting("plugins_disabled") or {}
 local heavy_plugins = {
     "opds",
