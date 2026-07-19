@@ -672,6 +672,9 @@ def main():
                 sftp_mkdir_recursive(sftp, "/mnt/us/documents/koreader.sh.sdr")
                 sftp_mkdir_recursive(sftp, "/mnt/us/documents/koreader.sdr")
                 
+                # Delete files first to avoid locked-file errors if open
+                ssh.exec_command("rm -f /mnt/us/documents/koreader.sh /mnt/us/documents/koreader.sh.sdr/icon.png /mnt/us/documents/koreader.sdr/metadata.sh.lua")
+                
                 # Upload files
                 sftp.put(os.path.join(local_launcher_root, "koreader.sh"), "/mnt/us/documents/koreader.sh")
                 sftp.chmod("/mnt/us/documents/koreader.sh", 0o777)
