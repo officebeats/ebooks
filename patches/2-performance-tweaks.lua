@@ -28,6 +28,12 @@ G_reader_settings:saveSetting("edge_brightness_enabled", true)
 G_reader_settings:saveSetting("edge_fontsize_enabled", true)
 logger.info("  Edge swipes for brightness & font size enabled.")
 
+-- 4.5 Battery Preservation (Auto-disconnect Wi-Fi after 3m & Auto-suspend after 10m)
+G_reader_settings:saveSetting("auto_disconnect_wifi", true)
+G_reader_settings:saveSetting("auto_disconnect_wifi_timeout", 3)
+G_reader_settings:saveSetting("auto_suspend_timeout", 10)
+logger.info("  Battery preservation tweaks enforced (Wi-Fi auto-off & auto-suspend).")
+
 -- 5. Zero-Animation Page Turns (Instant snappiness)
 G_reader_settings:saveSetting("page_transition", "none")
 G_reader_settings:saveSetting("page_animations_enabled", false)
