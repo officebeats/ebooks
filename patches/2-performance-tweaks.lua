@@ -11,13 +11,6 @@ if G_reader_settings:isTrue("debug") or G_reader_settings:isTrue("verbose_debug"
     logger.info("  Debug logging disabled.")
 end
 
--- 2. Sleeker UI scaling (dynamic DPI set to ~80% of physical DPI)
-local physical_dpi = Device.screen and (Device.screen.dpi or (Device.screen.getDPI and Device.screen:getDPI())) or 300
-if physical_dpi then
-    local sleek_dpi = math.floor(physical_dpi * 0.8)
-    G_reader_settings:saveSetting("screen_dpi", sleek_dpi)
-    logger.info(string.format("  Sleeker UI scale set (Physical: %d -> Sleek: %d)", physical_dpi, sleek_dpi))
-end
 
 -- 3. Crisp Font Contrast Boost (Emboldening)
 G_reader_settings:saveSetting("cr_contrast", 2)
