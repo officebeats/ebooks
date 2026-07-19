@@ -119,7 +119,12 @@ def main():
 
     # 1. Clean Crash Dumps & OTA Bloat
     rm -f /mnt/us/KPPMainAppV2_*.core
+    rm -rf /mnt/us/Indexer_Dump_*
     rm -f /mnt/us/update.bin.tmp.partial
+
+    # 1.5 Prevent future core dumps
+    touch /mnt/us/DISABLE_CORE_DUMP
+    touch /mnt/us/DISABLE_CORE_DUMP_ALERT
 
     # 2. Block Amazon Indexer
     rm -rf "/mnt/us/system/Search Indexes"
