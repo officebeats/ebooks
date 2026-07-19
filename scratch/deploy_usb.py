@@ -67,10 +67,30 @@ def clean_logs():
         removed += 1
     print(f"Removed {removed} bloat logs from root.")
 
+def deploy_launcher():
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    local_launcher_root = os.path.join(script_dir, "..", "koreader_home_launcher")
+    
+    if os.path.exists(local_launcher_root):
+        # Create directories
+        sdr_dir = os.path.join(KINDLE_DRIVE, "documents", "koreader.sh.sdr")
+        meta_dir = os.path.join(KINDLE_DRIVE, "documents", "koreader.sdr")
+        os.makedirs(sdr_dir, exist_ok=True)
+        os.makedirs(meta_dir, exist_ok=True)
+        
+        # Copy files
+        shutil.copy2(os.path.join(local_launcher_root, "koreader.sh"), os.path.join(KINDLE_DRIVE, "documents", "koreader.sh"))
+        shutil.copy2(os.path.join(local_launcher_root, "koreader.sh.sdr", "icon.png"), os.path.join(sdr_dir, "icon.png"))
+        shutil.copy2(os.path.join(local_launcher_root, "koreader.sdr", "metadata.sh.lua"), os.path.join(meta_dir, "metadata.sh.lua"))
+        print("Copied native home screen booklet launcher via USB.")
+    else:
+        print("ERROR: local launcher root not found for USB deploy!")
+
 def main():
     print(f"Deploying to Kindle USB at {KINDLE_DRIVE}...")
     copy_sui_baseline()
     update_settings_reader()
+    deploy_launcher()
     clean_amazon_bloat()
     clean_logs()
     print("USB Deployment Complete!")

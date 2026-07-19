@@ -655,6 +655,31 @@ def main():
         else:
             print("  [Dry Run] Would deploy KUAL menu.json for 1-tap No Framework.")
             
+        # 8.7 Deploy Native One-Click Home Screen Launcher
+        print("\n[Deploy] Deploying native one-click home screen launcher...")
+        local_launcher_root = os.path.join(script_dir, "koreader_home_launcher")
+        if os.path.exists(local_launcher_root):
+            if not dry_run:
+                # Create E:\documents directories
+                sftp_mkdir_recursive(sftp, "/mnt/us/documents/koreader.sh.sdr")
+                sftp_mkdir_recursive(sftp, "/mnt/us/documents/koreader.sdr")
+                
+                # Upload files
+                sftp.put(os.path.join(local_launcher_root, "koreader.sh"), "/mnt/us/documents/koreader.sh")
+                sftp.chmod("/mnt/us/documents/koreader.sh", 0o777)
+                
+                sftp.put(os.path.join(local_launcher_root, "koreader.sh.sdr", "icon.png"), "/mnt/us/documents/koreader.sh.sdr/icon.png")
+                sftp.chmod("/mnt/us/documents/koreader.sh.sdr/icon.png", 0o777)
+                
+                sftp.put(os.path.join(local_launcher_root, "koreader.sdr", "metadata.sh.lua"), "/mnt/us/documents/koreader.sdr/metadata.sh.lua")
+                sftp.chmod("/mnt/us/documents/koreader.sdr/metadata.sh.lua", 0o777)
+                
+                print("  Native home screen booklet launcher deployed successfully.")
+            else:
+                print("  [Dry Run] Would deploy native home screen booklet launcher.")
+        else:
+            print("  Warning: local launcher files not found!")
+            
         # 9. Upload Icons
         print("\n[Deploy] Uploading corner SVG icons...")
         if not dry_run:
