@@ -30,7 +30,7 @@ PLUGINS_TO_INSTALL = {
     "localsend": {
         "repo": "kaikozlov/localsend.koplugin",
         "target_folder": "localsend.koplugin",
-        "url": "https://github.com/kaikozlov/localsend.koplugin/releases/download/v1.3.0/localsend-koplugin-arm-legacy.zip"
+        "url": "https://github.com/kaikozlov/localsend.koplugin/releases/download/v1.4.1/localsend-koplugin-arm-legacy.zip"
     },
     "simpleui": {
         "repo": "doctorhetfield-cmd/simpleui.koplugin",
@@ -377,6 +377,12 @@ def configure_settings_reader_lua(sftp, dry_run=False):
         else:
             content = content.replace("return {", 'return {\n    ["screensaver_type"] = "cover",')
             
+        # Ensure default frontlight intensity is 7
+        if '["fl_intensity"]' in content:
+            content = re.sub(r'\["fl_intensity"\]\s*=\s*\d+', '["fl_intensity"] = 7', content)
+        else:
+            content = content.replace("return {", 'return {\n    ["fl_intensity"] = 7,')
+
         # Fix SimpleUI "modules exceeded area" error by enforcing a strict vertical layout limit
         safe_modules = {
             "simpleui_modules_active_tbr": "false",
@@ -612,14 +618,28 @@ def main():
         else:
             print(f"  [Dry Run] Would deploy patches from {temp_patches_dir} to {REMOTE_PATCHES_DIR}/")
 
-        # 8.5 Deploy KUAL No-Framework Auto-Launch Menu
+        # 8.5 Deploy SimpleUI Baseline Configuration
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        local_sui_baseline = os.path.join(script_dir, "simpleui_settings_baseline", "sui_settings.lua")
+        if os.path.exists(local_sui_baseline):
+            print("\n[Deploy] Pushing SimpleUI baseline configuration...")
+            remote_sui_dir = "/mnt/us/koreader/settings/simpleui"
+            if not dry_run:
+                sftp_mkdir_recursive(sftp, remote_sui_dir)
+                sftp.put(local_sui_baseline, f"{remote_sui_dir}/sui_settings.lua")
+                sftp.chmod(f"{remote_sui_dir}/sui_settings.lua", 0o666)
+                print(f"  Deployed SimpleUI baseline -> {remote_sui_dir}/sui_settings.lua")
+            else:
+                print(f"  [Dry Run] Would deploy SimpleUI baseline to {remote_sui_dir}/sui_settings.lua")
+
+        # 8.6 Deploy KUAL No-Framework Auto-Launch Menu
         print("\n[Deploy] Configuring KUAL No Framework 1-Tap Launch...")
         kual_menu = {
             "items": [
                 {
                     "name": "Start KOReader (Max Performance)",
                     "priority": 1,
-                    "action": "bin/koreader-ext.sh",
+                    "action": "bin/koreader.sh",
                     "params": "--kual --framework_stop"
                 }
             ]
