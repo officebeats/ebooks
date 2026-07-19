@@ -293,12 +293,14 @@ local function _key(id) return "simpleui_sysicon_" .. id end
 
 --- Returns the stored icon path for `id`, or nil if using the default.
 function M.getIcon(id)
+    if not id then return nil end
     local v = SUISettings:get(_key(id))
     return (type(v) == "string" and v ~= "") and v or nil
 end
 
 --- Saves `path` as the icon for `id`.  Pass nil to reset to default.
 function M.setIcon(id, path)
+    if not id then return end
     if type(path) == "string" and path ~= "" then
         SUISettings:set(_key(id), path)
     else

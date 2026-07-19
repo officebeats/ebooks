@@ -284,6 +284,13 @@ def find_plugin_root_dir(extract_dir):
             return root
     return None
 
+def safe_chmod(sftp, remote_path, mode):
+    """Safely apply chmod, ignoring failures on non-supportive filesystems like FAT32."""
+    try:
+        sftp.chmod(remote_path, mode)
+    except Exception:
+        pass
+
 def sftp_mkdir_recursive(sftp, remote_path):
     """Recursively create directories on the remote Kindle."""
     path_parts = remote_path.replace('\\', '/').split('/')
@@ -343,6 +350,76 @@ def load_kindle_hosts():
         except Exception as e:
             print(f"Error loading {hosts_path}: {e}")
     return {}
+
+def configure_koreader_sh(sftp, dry_run=False):
+    """Ensure mount-bind for Kindle screensaver is injected in koreader.sh."""
+    remote_path = "/mnt/us/koreader/koreader.sh"
+    if dry_run:
+        print("  [Dry Run] Would configure koreader.sh to mount-bind screensavers")
+        return
+        
+    try:
+        import tempfile
+        fd, local_temp = tempfile.mkstemp()
+        os.close(fd)
+        sftp.get(remote_path, local_temp)
+        
+        with open(local_temp, "r", encoding="utf-8") as f:
+            content = f.read()
+            
+        # Clean and rotate KPPMainAppV2 crash logs on launch
+        if "KPPMainAppV2" not in content:
+            kpp_code = (
+                "\n# Relocate and rotate KPPMainAppV2 crash logs to hidden folder\n"
+                "mkdir -p /mnt/us/system/crash_logs\n"
+                "for f in /mnt/us/documents/KPPMainAppV2_*; do\n"
+                "    [ -e \"$f\" ] || continue\n"
+                "    mv \"$f\" /mnt/us/system/crash_logs/ 2>/dev/null\n"
+                "done\n"
+                "rm -f /mnt/us/system/crash_logs/*.core 2>/dev/null\n"
+                "tgz_files=$(ls -1tr /mnt/us/system/crash_logs/KPPMainAppV2_*.tgz 2>/dev/null)\n"
+                "count=$(echo \"$tgz_files\" | grep -c \"KPPMainAppV2_\")\n"
+                "if [ \"$count\" -gt 1 ]; then\n"
+                "    oldest_files=$(echo \"$tgz_files\" | head -n -1)\n"
+                "    for f in $oldest_files; do\n"
+                "        rm -f \"$f\"\n"
+                "        rm -rf \"${f%.tgz}.sdr\"\n"
+                "    done\n"
+                "fi\n\n"
+            )
+            content = content.replace("#!/bin/sh", "#!/bin/sh\n" + kpp_code)
+            
+        # Avoid double-injection
+        if "mount -o bind /mnt/us/screensavers" not in content:
+            # Inject mount before RETURN_VALUE=85
+            mount_code = (
+                "# Mount custom screensaver path\n"
+                "mkdir -p /mnt/us/screensavers\n"
+                "mount -o bind /mnt/us/screensavers /usr/share/blanket/screensaver\n\n"
+            )
+            content = content.replace("RETURN_VALUE=85", mount_code + "RETURN_VALUE=85")
+            
+            # Inject umount after the while loop finishes
+            umount_code = (
+                "\n# Unmount custom screensaver path\n"
+                "umount -l /usr/share/blanket/screensaver\n"
+            )
+            loop_pattern = 'done\n\n# clean up our own process tree'
+            if loop_pattern in content:
+                content = content.replace(loop_pattern, 'done\n' + umount_code + '\n# clean up our own process tree')
+            else:
+                # Fallback replacement if formatting varies slightly
+                content = content.replace("done\n\n# clean up", "done\n" + umount_code + "\n# clean up")
+                
+        with open(local_temp, "w", encoding="utf-8", newline="\n") as f:
+            f.write(content)
+            
+        sftp.put(local_temp, remote_path)
+        safe_chmod(sftp, remote_path, 0o777)
+        os.remove(local_temp)
+        print("  Successfully injected screensaver mount-bind in koreader.sh")
+    except Exception as e:
+        print(f"  Error configuring koreader.sh: {e}")
 
 def configure_settings_reader_lua(sftp, dry_run=False):
     """Ensure SimpleUI and cover screensaver defaults are set in settings.reader.lua."""
@@ -404,7 +481,7 @@ def configure_settings_reader_lua(sftp, dry_run=False):
             
         # Upload back
         sftp.put(local_temp, remote_path)
-        sftp.chmod(remote_path, 0o777)
+        safe_chmod(sftp, remote_path, 0o777)
         print("  Successfully configured settings.reader.lua defaults.")
     except Exception as e:
         print(f"  Warning: Failed to configure settings.reader.lua: {e}")
@@ -614,15 +691,24 @@ def main():
         print("\n[Deploy] Uploading Lua patches...")
         if not dry_run:
             ssh.exec_command("rm -f /mnt/us/koreader/patches/4-auto-timesync.lua")
-        if not dry_run:
-            sftp_mkdir_recursive(sftp, REMOTE_PATCHES_DIR)
+            # Create KUAL backup directory for self-healing patches
+            backup_patches_dir = "/mnt/us/extensions/koreader/patches"
+            sftp_mkdir_recursive(sftp, backup_patches_dir)
+            
             for f in os.listdir(temp_patches_dir):
                 local_patch_path = os.path.join(temp_patches_dir, f)
                 if os.path.isfile(local_patch_path):
+                    # 1. Main deployment
                     remote_patch_dest = f"{REMOTE_PATCHES_DIR}/{f}"
                     sftp.put(local_patch_path, remote_patch_dest)
-                    sftp.chmod(remote_patch_dest, 0o777)
-                    print(f"  Deployed patch -> {remote_patch_dest}")
+                    safe_chmod(sftp, remote_patch_dest, 0o777)
+                    
+                    # 2. Local self-heal backup
+                    backup_patch_dest = f"{backup_patches_dir}/{f}"
+                    sftp.put(local_patch_path, backup_patch_dest)
+                    safe_chmod(sftp, backup_patch_dest, 0o777)
+                    
+                    print(f"  Deployed patch & self-heal backup -> {f}")
         else:
             print(f"  [Dry Run] Would deploy patches from {temp_patches_dir} to {REMOTE_PATCHES_DIR}/")
 
@@ -635,7 +721,7 @@ def main():
             if not dry_run:
                 sftp_mkdir_recursive(sftp, remote_sui_dir)
                 sftp.put(local_sui_baseline, f"{remote_sui_dir}/sui_settings.lua")
-                sftp.chmod(f"{remote_sui_dir}/sui_settings.lua", 0o666)
+                safe_chmod(sftp, f"{remote_sui_dir}/sui_settings.lua", 0o666)
                 print(f"  Deployed SimpleUI baseline -> {remote_sui_dir}/sui_settings.lua")
             else:
                 print(f"  [Dry Run] Would deploy SimpleUI baseline to {remote_sui_dir}/sui_settings.lua")
@@ -649,6 +735,11 @@ def main():
                     "priority": 1,
                     "action": "bin/koreader.sh",
                     "params": "--kual --framework_stop"
+                },
+                {
+                    "name": "Heal & Clean KOReader",
+                    "priority": 2,
+                    "action": "bin/heal_koreader.sh"
                 }
             ]
         }
@@ -664,12 +755,21 @@ def main():
             local_kual_wrapper = os.path.join(script_dir, "koreader_kual_launcher", "koreader.sh")
             if os.path.exists(local_kual_wrapper):
                 sftp.put(local_kual_wrapper, "/mnt/us/extensions/koreader/bin/koreader.sh")
-                sftp.chmod("/mnt/us/extensions/koreader/bin/koreader.sh", 0o777)
+                safe_chmod(sftp, "/mnt/us/extensions/koreader/bin/koreader.sh", 0o777)
                 print("  Custom KUAL menu.json and bin/koreader.sh wrapper deployed.")
             else:
                 print("  Warning: local KUAL wrapper script not found!")
+                
+            # Upload the KUAL heal script
+            local_heal_script = os.path.join(script_dir, "koreader_kual_launcher", "heal_koreader.sh")
+            if os.path.exists(local_heal_script):
+                sftp.put(local_heal_script, "/mnt/us/extensions/koreader/bin/heal_koreader.sh")
+                safe_chmod(sftp, "/mnt/us/extensions/koreader/bin/heal_koreader.sh", 0o777)
+                print("  Custom KUAL bin/heal_koreader.sh deployed.")
+            else:
+                print("  Warning: local KUAL heal script not found!")
         else:
-            print("  [Dry Run] Would deploy KUAL menu.json and bin/koreader.sh wrapper.")
+            print("  [Dry Run] Would deploy KUAL menu.json, bin/koreader.sh wrapper, and bin/heal_koreader.sh.")
             
         # 8.7 Deploy Native One-Click Home Screen Launcher
         print("\n[Deploy] Deploying native one-click home screen launcher...")
@@ -685,13 +785,13 @@ def main():
                 
                 # Upload files
                 sftp.put(os.path.join(local_launcher_root, "koreader.sh"), "/mnt/us/documents/koreader.sh")
-                sftp.chmod("/mnt/us/documents/koreader.sh", 0o777)
+                safe_chmod(sftp, "/mnt/us/documents/koreader.sh", 0o777)
                 
                 sftp.put(os.path.join(local_launcher_root, "koreader.sh.sdr", "icon.png"), "/mnt/us/documents/koreader.sh.sdr/icon.png")
-                sftp.chmod("/mnt/us/documents/koreader.sh.sdr/icon.png", 0o777)
+                safe_chmod(sftp, "/mnt/us/documents/koreader.sh.sdr/icon.png", 0o777)
                 
                 sftp.put(os.path.join(local_launcher_root, "koreader.sdr", "metadata.sh.lua"), "/mnt/us/documents/koreader.sdr/metadata.sh.lua")
-                sftp.chmod("/mnt/us/documents/koreader.sdr/metadata.sh.lua", 0o777)
+                safe_chmod(sftp, "/mnt/us/documents/koreader.sdr/metadata.sh.lua", 0o777)
                 
                 print("  Native home screen booklet launcher deployed successfully.")
             else:
@@ -708,10 +808,10 @@ def main():
                 if os.path.exists(local_icon_path):
                     remote_icon_dest = f"{REMOTE_ICONS_DIR}/{name}"
                     sftp.put(local_icon_path, remote_icon_dest)
-                    sftp.chmod(remote_icon_dest, 0o777)
+                    safe_chmod(sftp, remote_icon_dest, 0o777)
                     print(f"  Deployed icon -> {remote_icon_dest}")
         else:
-            print(f"  [Dry Run] Would deploy corner SVGs to {REMOTE_ICONS_DIR}/")
+            print("  [Dry Run] Would deploy corner SVGs to {REMOTE_ICONS_DIR}/")
 
         # 9.5 Force Time Sync from Deployment Machine
         print("\n[Deploy] Configuring robust Kindle timezone offsets...")
@@ -732,6 +832,7 @@ def main():
         # 10. Configure settings.reader.lua defaults (SimpleUI & Screensaver Cover)
         print("\n[Deploy] Configuring settings.reader.lua defaults...")
         configure_settings_reader_lua(sftp, dry_run=dry_run)
+        configure_koreader_sh(sftp, dry_run=dry_run)
             
         # 11. Strict Plugin Baseline Cleanup
         print("\n[Deploy] Enforcing strict plugin baseline...")

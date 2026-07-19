@@ -126,18 +126,43 @@ def main():
     touch /mnt/us/DISABLE_CORE_DUMP
     touch /mnt/us/DISABLE_CORE_DUMP_ALERT
 
-    # 2. Block Amazon Indexer
-    rm -rf "/mnt/us/system/Search Indexes"
-    touch "/mnt/us/system/Search Indexes"
-    chmod 444 "/mnt/us/system/Search Indexes"
+    # 2. Clean Amazon Indexer files safely
+    mkdir -p "/mnt/us/system/Search Indexes"
+    rm -rf "/mnt/us/system/Search Indexes/"* 2>/dev/null
 
-    # 3. Block Thumbnail Generator
-    rm -rf /mnt/us/system/thumbnails
-    touch /mnt/us/system/thumbnails
-    chmod 444 /mnt/us/system/thumbnails
+    # 3. Clean Thumbnail Cache safely
+    mkdir -p /mnt/us/system/thumbnails
+    rm -rf /mnt/us/system/thumbnails/* 2>/dev/null
 
-    # 4. Clean Amazon Documents (Protect KUAL and KOReader launchers)
-    find /mnt/us/documents -type f \\( -name "*.mobi" -o -name "*.azw*" -o -name "*.pdf" -o -name "*.txt" \\) ! -iname "*KUAL*" ! -iname "*koreader*" -exec rm -f {} +
+    # 4. Safely move all non-KUAL/non-KOReader books to /mnt/us/epubs/ to keep home screen clean
+    echo "Moving non-launcher books from /mnt/us/documents to /mnt/us/epubs/..."
+    mkdir -p /mnt/us/epubs
+    MOVED_ANY=0
+    for item in /mnt/us/documents/*; do
+        [ -e "$item" ] || continue
+        base=$(basename "$item")
+        
+        # Check if item name contains "koreader" or "KUAL" (case insensitive)
+        echo "$base" | grep -iqE "koreader|kual"
+        if [ $? -eq 0 ]; then
+            echo "  Preserving launcher item: $base"
+        else
+            echo "  Moving $base to /mnt/us/epubs/"
+            mv "$item" "/mnt/us/epubs/" 2>/dev/null || rm -rf "$item"
+            MOVED_ANY=1
+        fi
+    done
+    
+    # 4.5 Clean empty directories in documents
+    find /mnt/us/documents -depth -type d -empty -exec rmdir {} \\; 2>/dev/null
+    
+    # 4.6 Restart framework if books were moved
+    if [ $MOVED_ANY -eq 1 ]; then
+        echo "Restarting GUI framework to reload library..."
+        stop lab126_gui 2>/dev/null || killall cvm 2>/dev/null
+        /bin/sleep 2s
+        start lab126_gui 2>/dev/null || true
+    fi
     """
     ssh.exec_command(script_deep)
     

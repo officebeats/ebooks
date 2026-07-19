@@ -215,6 +215,15 @@ Screensaver.show = function(self)
         if self.image then
             widget_settings.image = self.image
             widget_settings.image_disposable = true
+            -- Kindle sleep screen cover export
+            pcall(function()
+                local lfs = require("libs/libkoreader-lfs")
+                lfs.mkdir("/mnt/us/screensavers")
+                for i = 0, 19 do
+                    local dest = string.format("/mnt/us/screensavers/bg_ss%02d.png", i)
+                    self.image:writePNG(dest, false)
+                end
+            end)
         elseif self.image_file then
             if G_reader_settings:isTrue("screensaver_rotate_auto_for_best_fit") then
                 -- We need to load the image here to determine whether to rotate

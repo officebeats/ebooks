@@ -105,6 +105,12 @@ def clean_remote_kindle(ip, sftp, ssh, dry_run=False):
                         try:
                             sftp.remove(p)
                             print(f"  Deleted remote file: {os.path.basename(p)}")
+                            
+                            # Also delete corresponding remote .sdr folders
+                            sdr_path1 = os.path.splitext(p)[0] + ".sdr"
+                            sdr_path2 = p + ".sdr"
+                            ssh.exec_command(f'rm -rf "{sdr_path1}" "{sdr_path2}"')
+                            
                             removed_count += 1
                         except Exception as e:
                             print(f"  Error deleting remote file {p}: {e}")
@@ -140,6 +146,16 @@ def clean_local(dry_run=False):
                         try:
                             os.remove(path)
                             print(f"  Deleted local file: {f}")
+                            
+                            # Also delete corresponding local .sdr folders
+                            import shutil
+                            sdr_path1 = os.path.splitext(path)[0] + ".sdr"
+                            sdr_path2 = path + ".sdr"
+                            if os.path.exists(sdr_path1):
+                                shutil.rmtree(sdr_path1)
+                            if os.path.exists(sdr_path2):
+                                shutil.rmtree(sdr_path2)
+                                
                             removed_count += 1
                         except Exception as e:
                             print(f"  Error deleting local file {f}: {e}")
