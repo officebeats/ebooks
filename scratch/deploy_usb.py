@@ -235,23 +235,30 @@ def deploy_plugins_and_icons():
         # 1. Download and deploy plugins
         for name, info in PLUGINS_TO_INSTALL.items():
             print(f"Fetching plugin: {name}...")
-            zip_url = info["url"]
-            zip_path = os.path.join(temp_dir, f"{name}.zip")
-            download_file(zip_url, zip_path)
             
-            extract_path = os.path.join(temp_dir, f"{name}_extracted")
-            with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-                zip_ref.extractall(extract_path)
-                
-            plugin_root = find_plugin_root_dir(extract_path)
-            if not plugin_root:
-                print(f"  ERROR: Could not find main.lua for {name}!")
-                continue
-                
             target_plugin_dir = os.path.join(KINDLE_DRIVE, "koreader", "plugins", info["target_folder"])
             if os.path.exists(target_plugin_dir):
                 shutil.rmtree(target_plugin_dir, ignore_errors=True)
-            shutil.copytree(plugin_root, target_plugin_dir)
+                
+            script_dir = os.path.dirname(os.path.abspath(__file__))
+            local_override_path = os.path.join(script_dir, "..", info["target_folder"])
+            if os.path.exists(local_override_path):
+                print(f"  Using local override from {local_override_path}")
+                shutil.copytree(local_override_path, target_plugin_dir)
+            else:
+                zip_url = info["url"]
+                zip_path = os.path.join(temp_dir, f"{name}.zip")
+                download_file(zip_url, zip_path)
+                
+                extract_path = os.path.join(temp_dir, f"{name}_extracted")
+                with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+                    zip_ref.extractall(extract_path)
+                    
+                plugin_root = find_plugin_root_dir(extract_path)
+                if not plugin_root:
+                    print(f"  ERROR: Could not find main.lua for {name}!")
+                    continue
+                shutil.copytree(plugin_root, target_plugin_dir)
             
             if name == "koassistant" and api_key:
                 print("  Configuring Gemini API key inside koassistant...")

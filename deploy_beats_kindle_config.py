@@ -462,6 +462,7 @@ def main():
     if dry_run:
         print(">>> DRY RUN ACTIVE: Local compilation only.")
         
+    script_dir = os.path.dirname(os.path.abspath(__file__))
     temp_dir = tempfile.mkdtemp()
     print(f"Created temporary workspace: {temp_dir}")
     
@@ -473,24 +474,31 @@ def main():
             repo = info["repo"]
             target_folder = info["target_folder"]
             
-            zip_url = info.get("url")
-            if not zip_url:
-                zip_url = fetch_latest_release_zip(repo)
-            zip_path = os.path.join(temp_dir, f"{name}.zip")
-            print(f"  Downloading from: {zip_url}")
-            download_file(zip_url, zip_path)
-            
-            extract_path = os.path.join(temp_dir, f"{name}_extracted")
-            with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-                zip_ref.extractall(extract_path)
+            # Check for local plugin directory override in repository root
+            local_override_path = os.path.join(script_dir, target_folder)
+            if os.path.exists(local_override_path):
+                print(f"  Using local override from {local_override_path}")
+                final_local_path = os.path.join(temp_dir, target_folder)
+                shutil.copytree(local_override_path, final_local_path)
+            else:
+                zip_url = info.get("url")
+                if not zip_url:
+                    zip_url = fetch_latest_release_zip(repo)
+                zip_path = os.path.join(temp_dir, f"{name}.zip")
+                print(f"  Downloading from: {zip_url}")
+                download_file(zip_url, zip_path)
                 
-            plugin_root = find_plugin_root_dir(extract_path)
-            if not plugin_root:
-                print(f"  ERROR: Could not find main.lua inside the zip for {name}!")
-                continue
-                
-            final_local_path = os.path.join(temp_dir, target_folder)
-            shutil.copytree(plugin_root, final_local_path)
+                extract_path = os.path.join(temp_dir, f"{name}_extracted")
+                with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+                    zip_ref.extractall(extract_path)
+                    
+                plugin_root = find_plugin_root_dir(extract_path)
+                if not plugin_root:
+                    print(f"  ERROR: Could not find main.lua inside the zip for {name}!")
+                    continue
+                    
+                final_local_path = os.path.join(temp_dir, target_folder)
+                shutil.copytree(plugin_root, final_local_path)
             
             # Configure KOAssistant Gemini API key
             if name == "koassistant":
