@@ -86,11 +86,24 @@ def deploy_launcher():
     else:
         print("ERROR: local launcher root not found for USB deploy!")
 
+def deploy_kual_wrapper():
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    local_wrapper = os.path.join(script_dir, "..", "koreader_kual_launcher", "koreader.sh")
+    
+    if os.path.exists(local_wrapper):
+        target_dir = os.path.join(KINDLE_DRIVE, "extensions", "koreader", "bin")
+        os.makedirs(target_dir, exist_ok=True)
+        shutil.copy2(local_wrapper, os.path.join(target_dir, "koreader.sh"))
+        print("Copied custom KUAL launcher wrapper via USB.")
+    else:
+        print("ERROR: local KUAL wrapper not found for USB deploy!")
+
 def main():
     print(f"Deploying to Kindle USB at {KINDLE_DRIVE}...")
     copy_sui_baseline()
     update_settings_reader()
     deploy_launcher()
+    deploy_kual_wrapper()
     clean_amazon_bloat()
     clean_logs()
     print("USB Deployment Complete!")

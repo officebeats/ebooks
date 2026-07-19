@@ -645,15 +645,23 @@ def main():
             ]
         }
         if not dry_run:
-            sftp_mkdir_recursive(sftp, "/mnt/us/extensions/koreader")
+            sftp_mkdir_recursive(sftp, "/mnt/us/extensions/koreader/bin")
             fd, temp_menu = tempfile.mkstemp()
             with os.fdopen(fd, 'w') as f:
                 json.dump(kual_menu, f, indent=2)
             sftp.put(temp_menu, "/mnt/us/extensions/koreader/menu.json")
             os.remove(temp_menu)
-            print("  Custom KUAL menu.json deployed (Forces No Framework).")
+            
+            # Upload the KUAL launch wrapper script
+            local_kual_wrapper = os.path.join(script_dir, "koreader_kual_launcher", "koreader.sh")
+            if os.path.exists(local_kual_wrapper):
+                sftp.put(local_kual_wrapper, "/mnt/us/extensions/koreader/bin/koreader.sh")
+                sftp.chmod("/mnt/us/extensions/koreader/bin/koreader.sh", 0o777)
+                print("  Custom KUAL menu.json and bin/koreader.sh wrapper deployed.")
+            else:
+                print("  Warning: local KUAL wrapper script not found!")
         else:
-            print("  [Dry Run] Would deploy KUAL menu.json for 1-tap No Framework.")
+            print("  [Dry Run] Would deploy KUAL menu.json and bin/koreader.sh wrapper.")
             
         # 8.7 Deploy Native One-Click Home Screen Launcher
         print("\n[Deploy] Deploying native one-click home screen launcher...")
