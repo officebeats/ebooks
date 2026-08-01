@@ -200,12 +200,16 @@ def main():
     # 4.5 Clean empty directories in documents
     find /mnt/us/documents -depth -type d -empty -exec rmdir {} \\; 2>/dev/null
     
-    # 4.6 Restart framework if books were moved
+    # 4.6 Restart native framework only if KOReader is not running
     if [ $MOVED_ANY -eq 1 ]; then
-        echo "Restarting GUI framework to reload library..."
-        stop lab126_gui 2>/dev/null || killall cvm 2>/dev/null
-        /bin/sleep 2s
-        start lab126_gui 2>/dev/null || true
+        if ps | grep reader.lua | grep -v grep >/dev/null; then
+            echo "KOReader is currently running. Preserving active KOReader session (skipping framework restart)."
+        else
+            echo "Restarting GUI framework to reload native library..."
+            stop lab126_gui 2>/dev/null || killall cvm 2>/dev/null
+            /bin/sleep 2s
+            start lab126_gui 2>/dev/null || true
+        fi
     fi
     """
     ssh.exec_command(script_deep)

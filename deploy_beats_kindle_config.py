@@ -870,7 +870,7 @@ def main():
         # 11. Restart KOReader
         if not dry_run:
             print("\n[Deploy] Restarting KOReader to apply all updates...")
-            ssh.exec_command("killall reader.lua")
+            ssh.exec_command("killall -9 reader.lua 2>/dev/null; /bin/sleep 1; /mnt/us/koreader/koreader.sh /mnt/us/koreader >/dev/null 2>&1 &")
             print("  Restart command sent successfully.")
             
         print("\n" + "="*50)

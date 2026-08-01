@@ -22,6 +22,7 @@ Execute the `sync_kindle_time_and_settings.py` script. This script connects to a
 
 ## Step 2: Optimize Storage, Normalize Resolution & Diagnose Crashes
 Execute the `optimize_kindle.py` script for each Kindle. This script maximizes available storage space for EPUB books (disabling Amazon indexer, purging Amazon search indexes, clearing Amazon thumbnail cache & KOReader image cache, blocking OTA updates, deleting logs and orphaned `.sdr` folders), resets KOReader resolution/scaling (`screen_dpi`, `ui_scale`, `font_scaling`) to default hardware native resolution, checks for recent KOReader crashes on that specific device, clears stale lock files, enforces Unix LF line endings on launcher scripts, and applies crash-prevention safeguards.
+**CRASH PREVENTION MANDATE:** Optimization scripts MUST preserve active `reader.lua` sessions and MUST NOT issue native GUI framework restarts (`stop lab126_gui`) while KOReader is running.
 **Command:** `python optimize_kindle.py --ip <kindle_nickname>`
 
 ## Step 3: Deduplicate Libraries
