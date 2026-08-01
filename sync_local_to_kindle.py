@@ -86,12 +86,9 @@ def main():
         sys.stdout.reconfigure(encoding='utf-8')
 
     hosts_config = load_kindle_hosts()
-    default_ip = DEFAULT_KINDLE_IP
-    if "white" in hosts_config:
-        default_ip = hosts_config["white"].get("ip", DEFAULT_KINDLE_IP)
 
     parser = argparse.ArgumentParser(description="Sync missing books from local folder back to Kindle")
-    parser.add_argument("--ip", default=default_ip, help=f"Kindle IP address or host nickname (default: {default_ip})")
+    parser.add_argument("--ip", help="Kindle IP address or host nickname (syncs all active hosts in kindle_hosts.json if omitted)")
     parser.add_argument("--port", type=int, help="Kindle SSH port")
     parser.add_argument("--user", default=DEFAULT_KINDLE_USER, help=f"Kindle SSH user (default: {DEFAULT_KINDLE_USER})")
     parser.add_argument("--password", default=DEFAULT_KINDLE_PASSWORD, help="Kindle SSH password")
@@ -100,19 +97,8 @@ def main():
     args = parser.parse_args()
     dry_run = args.dry_run
     
-    # Resolve from hosts config if nickname is used
-    for key, device in hosts_config.items():
-        ip_addr = device.get("ip", "")
-        if args.ip == key or args.ip in key or args.ip == ip_addr or args.ip in ip_addr:
-            args.ip = ip_addr
-            args.port = device.get("port", args.port) or args.port
-            args.user = device.get("user", args.user) or args.user
-            args.password = device.get("password", args.password) or args.password
-            break
-    
-    print("=== Syncing Local Books Delta to Kindle ===")
-    
     # 1. Scan local folder and calculate MD5s
+    print("=== Syncing Local Books Delta to Kindle Fleet ===")
     print(f"Scanning local directory: {LOCAL_DIR}...")
     local_files = [os.path.join(LOCAL_DIR, f) for f in os.listdir(LOCAL_DIR) if f.lower().endswith('.epub')]
     print(f"Found {len(local_files)} local EPUB files.")
@@ -122,76 +108,79 @@ def main():
         h = get_file_md5(lf)
         if h:
             local_by_md5[h] = lf
+
+    # Determine targets
+    targets = []
+    if args.ip:
+        resolved_ip = args.ip
+        target_port = args.port
+        target_user = args.user
+        target_pwd = args.password
+        for key, device in hosts_config.items():
+            ip_addr = device.get("ip", "")
+            if args.ip == key or args.ip in key or args.ip == ip_addr or args.ip in ip_addr:
+                resolved_ip = ip_addr
+                target_port = device.get("port", target_port) or target_port
+                target_user = device.get("user", target_user) or target_user
+                target_pwd = device.get("password", target_pwd) or target_pwd
+                break
+        targets.append((key if 'key' in locals() else args.ip, resolved_ip, target_port, target_user, target_pwd))
+    else:
+        for key, device in hosts_config.items():
+            targets.append((key, device.get("ip"), device.get("port"), device.get("user", DEFAULT_KINDLE_USER), device.get("password", DEFAULT_KINDLE_PASSWORD)))
+
+    for host_name, target_ip, target_port, target_user, target_pwd in targets:
+        print(f"\n" + "="*60)
+        print(f" Syncing with device: {host_name} ({target_ip})")
+        print("="*60)
+        
+        ssh = build_connection(target_ip, target_port, target_user, target_pwd)
+        if not ssh:
+            print(f"WARNING: Could not connect to Kindle at {target_ip}. Skipping.")
+            continue
             
-    # 2. Connect to Kindle
-    ssh = build_connection(args.ip, args.port, args.user, args.password)
-    if not ssh:
-        print("ERROR: Could not connect to Kindle. Aborting.")
-        sys.exit(1)
-        
-    sftp = ssh.open_sftp()
-    
-    try:
-        # Ensure remote directory exists
-        ssh.exec_command(f"mkdir -p {REMOTE_BOOKS_DIR}")
-        
-        # 3. Find EPUBs on Kindle and calculate their MD5s
-        print("\nScanning Kindle for existing books...")
-        find_cmd = f'find {REMOTE_BOOKS_DIR} -name "*.epub" 2>/dev/null'
-        stdin, stdout, stderr = ssh.exec_command(find_cmd)
-        remote_paths = [line.strip() for line in stdout.read().decode('utf-8', errors='ignore').splitlines() if line.strip()]
-        
-        print(f"Found {len(remote_paths)} EPUB files on Kindle.")
-        
-        remote_md5s = set()
-        for rp in remote_paths:
-            h = get_remote_file_md5(ssh, rp)
-            if h:
-                remote_md5s.add(h)
-                
-        # 4. Find delta (local files that are NOT on the Kindle)
-        print("\nCalculating delta (books in local folder missing from Kindle)...")
-        to_upload = []
-        for h, lf in local_by_md5.items():
-            if h not in remote_md5s:
-                to_upload.append(lf)
-                
-        print(f"Found {len(to_upload)} books to upload.")
-        
-        # 5. Upload missing books
-        uploaded_count = 0
-        error_count = 0
-        
-        for lf in to_upload:
-            basename = os.path.basename(lf)
-            remote_dest = f"{REMOTE_BOOKS_DIR}/{basename}"
-            print(f"\nUploading: {basename}")
-            if not dry_run:
-                try:
-                    sftp.put(lf, remote_dest)
-                    sftp.chmod(remote_dest, 0o777)
-                    print("  Status: Uploaded successfully!")
+        sftp = ssh.open_sftp()
+        try:
+            ssh.exec_command(f"mkdir -p {REMOTE_BOOKS_DIR}")
+            print("Scanning Kindle for existing books...")
+            find_cmd = f'find {REMOTE_BOOKS_DIR} -name "*.epub" 2>/dev/null'
+            stdin, stdout, stderr = ssh.exec_command(find_cmd)
+            remote_paths = [line.strip() for line in stdout.read().decode('utf-8', errors='ignore').splitlines() if line.strip()]
+            print(f"Found {len(remote_paths)} EPUB files on Kindle.")
+            
+            remote_md5s = set()
+            for rp in remote_paths:
+                h = get_remote_file_md5(ssh, rp)
+                if h:
+                    remote_md5s.add(h)
+                    
+            print("\nCalculating delta (books missing from this Kindle)...")
+            to_upload = [lf for h, lf in local_by_md5.items() if h not in remote_md5s]
+            print(f"Found {len(to_upload)} books to upload.")
+            
+            uploaded_count = 0
+            error_count = 0
+            for lf in to_upload:
+                basename = os.path.basename(lf)
+                remote_dest = f"{REMOTE_BOOKS_DIR}/{basename}"
+                print(f"Uploading: {basename}")
+                if not dry_run:
+                    try:
+                        sftp.put(lf, remote_dest)
+                        sftp.chmod(remote_dest, 0o777)
+                        print("  Status: Uploaded successfully!")
+                        uploaded_count += 1
+                    except Exception as e:
+                        print(f"  Error uploading file: {e}")
+                        error_count += 1
+                else:
+                    print(f"  [Dry Run] Would upload -> {remote_dest}")
                     uploaded_count += 1
-                except Exception as e:
-                    print(f"  Error uploading file: {e}")
-                    error_count += 1
-            else:
-                print(f"  [Dry Run] Would upload -> {remote_dest}")
-                uploaded_count += 1
-                
-        print("\n" + "="*50)
-        print(" SYNC SUMMARY")
-        print("="*50)
-        print(f"  Total local files:    {len(local_files)}")
-        print(f"  Existing on Kindle:   {len(remote_paths)}")
-        print(f"  Uploaded delta:       {uploaded_count}")
-        print(f"  Errors encountered:   {error_count}")
-        print("="*50)
-        
-    finally:
-        sftp.close()
-        ssh.close()
-        print("\nSSH connection closed.")
+                    
+            print(f"\nDevice {host_name} Sync Completed: {uploaded_count} uploaded, {error_count} errors.")
+        finally:
+            sftp.close()
+            ssh.close()
 
 if __name__ == "__main__":
     main()
