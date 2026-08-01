@@ -882,11 +882,15 @@ def main():
             
             # 2. Tell the Kindle OS to apply Chicago offset to the top-bar lockscreen clock
             ssh.exec_command("lipc-set-prop com.lab126.wan timezone America/Chicago")
+
+            # 2.5 Force native home screen filter to Downloaded items only and suppress Cloud pop-ups
+            ssh.exec_command("lipc-set-prop com.lab126.booklet.home setFilterId 1 2>/dev/null || true")
+            ssh.exec_command("stop todo 2>/dev/null; stop todo.kaf 2>/dev/null; stop cloudcomm 2>/dev/null")
             
             # 3. Inject TZ into KOReader's launch script so Lua os.date("*t") evaluates local time flawlessly
             ssh.exec_command("sed -i '/export LC_ALL/a export TZ=CST6CDT' /mnt/us/koreader/koreader.sh")
             
-            print("  Successfully shifted all clock contexts to Central Time.")
+            print("  Successfully shifted clock contexts to Central Time & suppressed Cloud pop-ups.")
         else:
             print("  [Dry Run] Would inject TZ and LIPC offsets.")
 
