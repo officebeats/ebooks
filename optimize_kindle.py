@@ -164,13 +164,19 @@ def main():
     touch /mnt/us/DISABLE_CORE_DUMP
     touch /mnt/us/DISABLE_CORE_DUMP_ALERT
 
-    # 2. Clean Amazon Indexer files safely
+    # 2. Clean Amazon Indexer files safely and enforce indexer disable flag
     mkdir -p "/mnt/us/system/Search Indexes"
     rm -rf "/mnt/us/system/Search Indexes/"* 2>/dev/null
+    touch "/mnt/us/system/Search Indexes/DISABLE_INDEXER" 2>/dev/null
 
-    # 3. Clean Thumbnail Cache safely
+    # 3. Clean Thumbnail Cache & KOReader stale image cache safely
     mkdir -p /mnt/us/system/thumbnails
     rm -rf /mnt/us/system/thumbnails/* 2>/dev/null
+    rm -rf /mnt/us/koreader/cache/* 2>/dev/null
+
+    # 3.5 Block OTA updates
+    rm -rf /mnt/us/update.bin /mnt/us/*.bin 2>/dev/null
+    mkdir -p /mnt/us/update.bin.tmp.partial 2>/dev/null
 
     # 4. Safely move all non-KUAL/non-KOReader books to /mnt/us/epubs/ to keep home screen clean
     echo "Moving non-launcher books from /mnt/us/documents to /mnt/us/epubs/..."
@@ -230,7 +236,7 @@ EOF
 
     print("Deep optimizations applied (indexers blocked, bloat wiped, shortcut installed, auto-boot injected).")
 
-    print("\n--- 3. Rendering Tweaks ---")
+    print("\n--- 3. Rendering Tweaks & Hardware Resolution Normalization ---")
     sftp = ssh.open_sftp()
     remote_settings = "/mnt/us/koreader/settings.reader.lua"
     fd, local_temp = tempfile.mkstemp()
@@ -240,6 +246,14 @@ EOF
         with open(local_temp, "r", encoding="utf-8") as f:
             content = f.read()
             
+        # 1. Strip screen_dpi, ui_scale, and font_scaling to force hardware default DPI auto-detection
+        if '["screen_dpi"]' in content:
+            content = re.sub(r'\["screen_dpi"\]\s*=\s*[^,\n]+,?\n?', '', content)
+        if '["ui_scale"]' in content:
+            content = re.sub(r'\["ui_scale"\]\s*=\s*[^,\n]+,?\n?', '', content)
+        if '["font_scaling"]' in content:
+            content = re.sub(r'\["font_scaling"\]\s*=\s*[^,\n]+,?\n?', '', content)
+
         # Tweaks
         # kerning_method = "good"
         if '["font_kerning"]' in content:
@@ -263,7 +277,7 @@ EOF
             f.write(content)
             
         sftp.put(local_temp, remote_settings)
-        print("Settings successfully updated for performance.")
+        print("Settings successfully updated for performance and native hardware resolution.")
     except Exception as e:
         print(f"Error updating settings: {e}")
     finally:

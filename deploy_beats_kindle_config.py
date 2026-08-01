@@ -476,9 +476,13 @@ def configure_settings_reader_lua(sftp, dry_run=False):
         if '["simpleui_userdata_migrated_v1"]' not in content:
             content = content.replace("return {", 'return {\n    ["simpleui_userdata_migrated_v1"] = true,')
             
-        # Strip screen_dpi setting to restore default legible scaling
+        # Strip custom screen_dpi, ui_scale, and font_scaling to restore default legible hardware resolution
         if '["screen_dpi"]' in content:
-            content = re.sub(r'\["screen_dpi"\]\s*=\s*\d+,?\n?', '', content)
+            content = re.sub(r'\["screen_dpi"\]\s*=\s*[^,\n]+,?\n?', '', content)
+        if '["ui_scale"]' in content:
+            content = re.sub(r'\["ui_scale"\]\s*=\s*[^,\n]+,?\n?', '', content)
+        if '["font_scaling"]' in content:
+            content = re.sub(r'\["font_scaling"\]\s*=\s*[^,\n]+,?\n?', '', content)
 
         with open(local_temp, "w", encoding="utf-8") as f:
             f.write(content)

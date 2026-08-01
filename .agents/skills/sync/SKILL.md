@@ -20,8 +20,8 @@ For each Kindle in `kindle_hosts.json`, you MUST run the deployment script to fe
 Execute the `sync_kindle_time_and_settings.py` script. This script connects to all active Kindles, syncs their system time to match the host PC, sets the timezone to Chicago, and modifies KOReader's configuration to use location-based Auto Night Mode.
 **Command:** `python sync_kindle_time_and_settings.py`
 
-## Step 2: Optimize, Diagnose Crashes & Clean Up Kindle Storage
-Execute the `optimize_kindle.py` script for each Kindle. This script optimizes performance, removes unnecessary plugins, cleans storage bloat, checks for recent KOReader crashes on that specific device, clears stale lock files, enforces Unix LF line endings on launcher scripts, and applies crash-prevention safeguards.
+## Step 2: Optimize Storage, Normalize Resolution & Diagnose Crashes
+Execute the `optimize_kindle.py` script for each Kindle. This script maximizes available storage space for EPUB books (disabling Amazon indexer, purging Amazon search indexes, clearing Amazon thumbnail cache & KOReader image cache, blocking OTA updates, deleting logs and orphaned `.sdr` folders), resets KOReader resolution/scaling (`screen_dpi`, `ui_scale`, `font_scaling`) to default hardware native resolution, checks for recent KOReader crashes on that specific device, clears stale lock files, enforces Unix LF line endings on launcher scripts, and applies crash-prevention safeguards.
 **Command:** `python optimize_kindle.py --ip <kindle_nickname>`
 
 ## Step 3: Deduplicate Libraries
