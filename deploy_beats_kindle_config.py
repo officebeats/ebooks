@@ -805,6 +805,24 @@ def main():
                 print("  [Dry Run] Would deploy native home screen booklet launcher.")
         else:
             print("  Warning: local launcher files not found!")
+
+        # 8.8 Clean Home Screen Documents (Ensure only KUAL & KOReader Launcher are in /mnt/us/documents)
+        print("\n[Deploy] Isolating native home screen items (moving non-launchers to /mnt/us/epubs/)...")
+        if not dry_run:
+            clean_docs_script = """
+            mkdir -p /mnt/us/epubs
+            for item in /mnt/us/documents/*; do
+                [ -e "$item" ] || continue
+                base=$(basename "$item")
+                echo "$base" | grep -iqE "koreader|kual"
+                if [ $? -ne 0 ]; then
+                    mv "$item" "/mnt/us/epubs/" 2>/dev/null || rm -rf "$item"
+                fi
+            done
+            find /mnt/us/documents -depth -type d -empty -exec rmdir {} \\; 2>/dev/null
+            """
+            ssh.exec_command(clean_docs_script)
+            print("  Home screen isolated. Only KUAL & KOReader launchers remain in /mnt/us/documents.")
             
         # 9. Upload Icons
         print("\n[Deploy] Uploading corner SVG icons...")

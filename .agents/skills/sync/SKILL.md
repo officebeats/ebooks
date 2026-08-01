@@ -7,13 +7,15 @@ description: Automatically run the /sync command to deduplicate and sync the ebo
 
 When the user types `/sync` or requests to sync their ebooks, you MUST follow this strict 4-step workflow. This applies to Antigravity, Claude Code, Codex, or any compatible AI agent.
 
-## Step 0: Maintenance & Updates (Plugins and Patches)
-Before syncing, ensure all active Kindles have the latest plugins, patches, and configurations.
-For each Kindle in `kindle_hosts.json`, you MUST run the deployment script to fetch the latest GitHub releases, deploy them, and enforce a strict plugin baseline (automatically deleting unauthorized bloat plugins).
-**IMPORTANT CHECK:** As an agent, if you are running this kit, you MUST ensure that the following core modifications are present or installed via the deployment script:
-1. `4-auto-timesync.lua` (for automated NTP time sync on wake)
-2. `4-auto-dedupe.lua` (for automated storage deduplication on wake)
-3. The custom KUAL `menu.json` config that forces "No Framework" 1-Tap Launch.
+## Step 0: Maintenance, Clean Baseline & Launcher Enforcement
+Before syncing, ensure all active Kindles have the latest plugins, patches, launchers, and configurations.
+For each Kindle in `kindle_hosts.json`, you MUST run the deployment script (`python deploy_beats_kindle_config.py --ip <kindle_nickname>`).
+**MANDATORY BASELINE ENFORCEMENTS:**
+1. **Home Screen Document Isolation**: Moves non-launcher books out of `/mnt/us/documents/` into `/mnt/us/epubs/` so that **ONLY KUAL and KOReader launchers** appear on the native Kindle home screen. Tapping KOReader from the home screen is the primary entry point for launching KOReader.
+2. **Hardware-Adaptive Auto-Boot**: Injects upstart auto-boot configuration (`koreader-autoboot.conf` in `/etc/upstart` or `/etc/init` adapted to OS version) to auto-launch KOReader on fresh boot or reboot.
+3. **Smart Power & SSH Keep-Alive (`3-keep-ssh-alive-charging.lua`)**: When plugged in (charging), prevents screen saver (`preventScreenSaver = 1`) so the device stays awake for SSH sync tool operations. When unplugged (battery mode), operates normally to maximize battery life.
+4. **Automated Background Modifications**: Deploys `4-auto-timesync.lua` (NTP time sync on wake) and `4-auto-dedupe.lua` (storage deduplication on wake).
+5. **Strict Plugin Baseline**: Automatically purges unauthorized bloat plugins.
 **Command:** `python deploy_beats_kindle_config.py --ip <kindle_nickname>`
 
 ## Step 1: Sync Kindle Time & Settings

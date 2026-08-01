@@ -19,11 +19,11 @@ This repository features an automated multi-device Kindle fleet management and s
 
 ### 🚀 `/sync` Workflow Pipeline
 
-1. **Step 0: Maintenance & Configuration Baseline (`deploy_beats_kindle_config.py`)**:
-   - Deploys KOReader plugins (`localsend`, `simpleui`, `simpleui_ext`, `koassistant` with Gemini API key).
-   - Deploys user Lua patches (`4-auto-timesync.lua`, `4-auto-dedupe.lua`, `5-auto-darkmode.lua`, etc.).
-   - Uploads custom SVG corner icons and configures No-Framework 1-Tap KUAL & Booklet Launchers.
-   - Enforces a strict plugin baseline (deleting unauthorized bloat plugins).
+1. **Step 0: Maintenance, Clean Baseline & Launcher Enforcement (`deploy_beats_kindle_config.py`)**:
+   - **Home Screen Document Isolation**: Moves non-launcher books out of `/mnt/us/documents/` into `/mnt/us/epubs/` so that **ONLY KUAL and KOReader launchers** appear on the native Kindle home screen. Tapping KOReader from the home screen is the primary entry point for launching KOReader.
+   - **Hardware-Adaptive Auto-Boot**: Injects upstart auto-boot configuration (`koreader-autoboot.conf` in `/etc/upstart` or `/etc/init` adapted to OS version) to auto-launch KOReader on fresh boot or reboot.
+   - **Smart Power & SSH Keep-Alive (`3-keep-ssh-alive-charging.lua`)**: When plugged in (charging), prevents screen saver (`preventScreenSaver = 1`) so the device stays awake for SSH sync tool operations. When unplugged (battery mode), operates normally to maximize battery life.
+   - **Plugin & Patch Baseline**: Deploys plugins (`localsend`, `simpleui`, `simpleui_ext`, `koassistant` with Gemini API key), user Lua patches (`4-auto-timesync.lua`, `4-auto-dedupe.lua`, `5-auto-darkmode.lua`), custom SVG corner icons, and purges unauthorized bloat plugins.
 
 2. **Step 1: Time, Timezone & Location Synchronization (`sync_kindle_time_and_settings.py`)**:
    - Synchronizes Kindle hardware/OS system clocks directly to host PC time.
