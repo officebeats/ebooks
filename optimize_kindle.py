@@ -96,8 +96,24 @@ def main():
     v_txt = stdout.read().decode('utf-8', errors='ignore').strip()
     stdin, stdout, stderr = ssh.exec_command("grep -i Hardware /proc/cpuinfo 2>/dev/null")
     cpu_hw = stdout.read().decode('utf-8', errors='ignore').strip()
-    print(f"  [Hardware Scan] {cpu_hw if cpu_hw else 'Kindle Hardware Board'} | {v_txt if v_txt else 'Kindle OS'}")
-    print("  [Adaptive Profiling] Aligning rendering parameters to native e-ink hardware display resolution.")
+    stdin, stdout, stderr = ssh.exec_command("free -m | grep Mem | awk '{print $2}'")
+    ram_mb = stdout.read().decode('utf-8', errors='ignore').strip()
+    total_ram_mb = int(ram_mb) if ram_mb.isdigit() else 256
+    is_low_ram = total_ram_mb <= 384
+
+    print(f"  [Hardware Scan] {cpu_hw if cpu_hw else 'Kindle Hardware Board'} | RAM: {total_ram_mb}MB | {v_txt if v_txt else 'Kindle OS'}")
+    
+    # Adaptive kernel sysctl memory tuning
+    if is_low_ram:
+        print("  [Adaptive RAM Profiling] Low-RAM profile active (<= 384MB RAM). Applying aggressive Linux kernel VM cache reclamation...")
+        ssh.exec_command("sysctl -w vm.vfs_cache_pressure=150 vm.dirty_background_ratio=5 vm.dirty_ratio=10 2>/dev/null")
+    else:
+        print("  [Adaptive RAM Profiling] High-RAM profile active (>= 512MB RAM). Applying balanced page cache retention...")
+        ssh.exec_command("sysctl -w vm.vfs_cache_pressure=100 vm.dirty_background_ratio=10 vm.dirty_ratio=20 2>/dev/null")
+
+    # Amazon OS background bloat daemon sweep
+    print("  [Amazon Bloat Sweep] Suppressing background Amazon telemetry daemons (phd, tod, otav3, scanlogd)...")
+    ssh.exec_command("stop phd 2>/dev/null || killall -9 phd 2>/dev/null; stop tod 2>/dev/null || killall -9 tod 2>/dev/null; stop otav3 2>/dev/null || killall -9 otav3 2>/dev/null; stop scanlogd 2>/dev/null || killall -9 scanlogd 2>/dev/null")
 
     print("\n--- 2.4 Device-Specific Crash Diagnostics & Prevention ---")
     stdin, stdout, stderr = ssh.exec_command("ps | grep reader.lua | grep -v grep")
@@ -266,12 +282,12 @@ EOF
         if '["font_scaling"]' in content:
             content = re.sub(r'\["font_scaling"\]\s*=\s*[^,\n]+,?\n?', '', content)
 
-        # Tweaks
-        # kerning_method = "good"
+        # Hardware-adaptive rendering tweaks
+        kerning_val = "fast" if is_low_ram else "good"
         if '["font_kerning"]' in content:
-            content = re.sub(r'\["font_kerning"\]\s*=\s*"[^"]*"', '["font_kerning"] = "good"', content)
+            content = re.sub(r'\["font_kerning"\]\s*=\s*"[^"]*"', f'["font_kerning"] = "{kerning_val}"', content)
         else:
-            content = content.replace("return {", 'return {\n    ["font_kerning"] = "good",')
+            content = content.replace("return {", f'return {{\n    ["font_kerning"] = "{kerning_val}",')
             
         # image_scaling = "fast"
         if '["image_scaling"]' in content:

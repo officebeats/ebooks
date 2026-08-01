@@ -20,11 +20,15 @@ For each Kindle in `kindle_hosts.json`, you MUST run the deployment script to fe
 Execute the `sync_kindle_time_and_settings.py` script. This script connects to all active Kindles, syncs their system time to match the host PC, sets the timezone to Chicago, and modifies KOReader's configuration to use location-based Auto Night Mode.
 **Command:** `python sync_kindle_time_and_settings.py`
 
-## Step 2: Hardware Scan, Adaptive Resolution, Storage Optimization & Crash Diagnostics
+## Step 2: Hardware Scan, Adaptive Resolution, RAM Tuning & Crash Diagnostics
 Execute the `optimize_kindle.py` script for each Kindle. This script performs the following core actions every time `/sync` runs:
-1. **Hardware Spec Scan & Adaptive Resolution Profiling**: Scans device CPU, board, and OS version (e.g. MX50 Yoshime vs Wario i.MX6), extracts native display capabilities, and resets KOReader resolution/scaling (`screen_dpi`, `ui_scale`, `font_scaling`) to align strictly with the e-ink hardware's native DPI.
-2. **Maximum Storage Optimization**: Maximizes available storage space for EPUB books by disabling the Amazon search indexer (`DISABLE_INDEXER`), purging Amazon search index databases (`/mnt/us/system/Search Indexes/*`), clearing Amazon thumbnail cache (`/mnt/us/system/thumbnails/*`), clearing KOReader cover image cache (`/mnt/us/koreader/cache/*`), blocking OTA firmware updates (`/mnt/us/update.bin.tmp.partial`), and deleting logs and orphaned `.sdr` folders.
-3. **Crash Diagnostics & Prevention**: Verifies KOReader process health (`reader.lua`), inspects crash logs (`/mnt/us/koreader/crash.log` and `/var/log/messages`), clears stale locks, disables core dumps, and enforces Unix LF line endings on launcher scripts.
+1. **Hardware Spec Scan & Adaptive Resolution/RAM Profiling**: Scans device CPU, board, OS version, and total RAM capacity. Automatically applies hardware-tailored profiles:
+   - **Low-RAM (<= 384MB RAM)**: Applies aggressive Linux kernel VM cache reclamation (`sysctl vm.vfs_cache_pressure=150`), limits cover cache bloat, and optimizes font kerning (`font_kerning="fast"`).
+   - **High-RAM (>= 512MB RAM)**: Applies balanced page cache retention (`sysctl vm.vfs_cache_pressure=100`) for instantaneous page flips and high-quality typography (`font_kerning="good"`).
+   - **Hardware Resolution**: Resets KOReader resolution/scaling (`screen_dpi`, `ui_scale`, `font_scaling`) to align strictly with the e-ink hardware's native DPI.
+2. **Amazon Bloat Daemon Sweep**: Suppresses unnecessary Amazon telemetry and phone-home background daemons (`phd`, `tod`, `otav3`, `scanlogd`) while KOReader runs, freeing 20MB–40MB of RAM and eliminating CPU spikes.
+3. **Maximum Storage Optimization**: Maximizes available storage space for EPUB books by disabling the Amazon search indexer (`DISABLE_INDEXER`), purging Amazon search index databases (`/mnt/us/system/Search Indexes/*`), clearing Amazon thumbnail cache (`/mnt/us/system/thumbnails/*`), clearing KOReader cover image cache (`/mnt/us/koreader/cache/*`), blocking OTA firmware updates (`/mnt/us/update.bin.tmp.partial`), and deleting logs and orphaned `.sdr` folders.
+4. **Crash Diagnostics & Prevention**: Verifies KOReader process health (`reader.lua`), inspects crash logs (`/mnt/us/koreader/crash.log` and `/var/log/messages`), clears stale locks, disables core dumps, and enforces Unix LF line endings on launcher scripts.
 **CRASH PREVENTION MANDATE:** Optimization scripts MUST preserve active `reader.lua` sessions and MUST NOT issue native GUI framework restarts (`stop lab126_gui`) while KOReader is running.
 **Command:** `python optimize_kindle.py --ip <kindle_nickname>`
 
