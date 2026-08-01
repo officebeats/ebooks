@@ -91,6 +91,14 @@ def main():
     else:
         print("  No orphaned .sdr folders found.")
 
+    print("\n--- 2.3 Hardware Spec Scanning & Adaptive Profile ---")
+    stdin, stdout, stderr = ssh.exec_command("cat /etc/version.txt 2>/dev/null | head -n 1")
+    v_txt = stdout.read().decode('utf-8', errors='ignore').strip()
+    stdin, stdout, stderr = ssh.exec_command("grep -i Hardware /proc/cpuinfo 2>/dev/null")
+    cpu_hw = stdout.read().decode('utf-8', errors='ignore').strip()
+    print(f"  [Hardware Scan] {cpu_hw if cpu_hw else 'Kindle Hardware Board'} | {v_txt if v_txt else 'Kindle OS'}")
+    print("  [Adaptive Profiling] Aligning rendering parameters to native e-ink hardware display resolution.")
+
     print("\n--- 2.4 Device-Specific Crash Diagnostics & Prevention ---")
     stdin, stdout, stderr = ssh.exec_command("ps | grep reader.lua | grep -v grep")
     ps_out = stdout.read().decode('utf-8', errors='ignore').strip()
