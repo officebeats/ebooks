@@ -367,10 +367,22 @@ def configure_koreader_sh(sftp, dry_run=False):
         with open(local_temp, "r", encoding="utf-8") as f:
             content = f.read()
             
-        # Clean and rotate KPPMainAppV2 crash logs on launch
+        # Clean and rotate KPPMainAppV2 crash logs and run pre-launch optimizations
         if "KPPMainAppV2" not in content:
             kpp_code = (
-                "\n# Relocate and rotate KPPMainAppV2 crash logs to hidden folder\n"
+                "\n# --- INSTANT PRE-LAUNCH OPTIMIZATION SWEEP ---\n"
+                "stop fontscanner 2>/dev/null || true\n"
+                "stop kfxreader 2>/dev/null || true\n"
+                "stop scanner 2>/dev/null || true\n"
+                "stop tod 2>/dev/null || true\n"
+                "stop phd 2>/dev/null || true\n"
+                "stop scanlogd 2>/dev/null || true\n"
+                "stop otav3 2>/dev/null || true\n"
+                "sysctl vm.vfs_cache_pressure=100 2>/dev/null || true\n"
+                "sysctl vm.dirty_ratio=20 2>/dev/null || true\n"
+                "echo 3 > /proc/sys/vm/drop_caches 2>/dev/null || true\n"
+                "rm -f /var/tmp/koreader-fb.dump /tmp/koreader* /tmp/dropbear* 2>/dev/null || true\n\n"
+                "# Relocate and rotate KPPMainAppV2 crash logs to hidden folder\n"
                 "mkdir -p /mnt/us/system/crash_logs\n"
                 "for f in /mnt/us/documents/KPPMainAppV2_*; do\n"
                 "    [ -e \"$f\" ] || continue\n"
@@ -785,20 +797,25 @@ def main():
             if not dry_run:
                 # Create E:\documents directories
                 sftp_mkdir_recursive(sftp, "/mnt/us/documents/koreader.sh.sdr")
+                sftp_mkdir_recursive(sftp, "/mnt/us/documents/koreader.sh.sdr")
                 sftp_mkdir_recursive(sftp, "/mnt/us/documents/koreader.sdr")
                 
                 # Delete files first to avoid locked-file errors if open
-                ssh.exec_command("rm -f /mnt/us/documents/koreader.sh /mnt/us/documents/koreader.sh.sdr/icon.png /mnt/us/documents/koreader.sdr/metadata.sh.lua")
+                ssh.exec_command("rm -f /mnt/us/documents/koreader.sh /mnt/us/documents/koreader.sh.sdr/icon.png /mnt/us/documents/koreader.sdr/metadata.sh.lua /mnt/us/documents/koreader.sh.sdr/metadata.sh.lua")
                 
                 # Upload files
                 sftp.put(os.path.join(local_launcher_root, "koreader.sh"), "/mnt/us/documents/koreader.sh")
                 safe_chmod(sftp, "/mnt/us/documents/koreader.sh", 0o777)
                 
                 sftp.put(os.path.join(local_launcher_root, "koreader.sh.sdr", "icon.png"), "/mnt/us/documents/koreader.sh.sdr/icon.png")
+                sftp.put(os.path.join(local_launcher_root, "koreader.sh.sdr", "icon.png"), "/mnt/us/documents/koreader.sdr/icon.png")
                 safe_chmod(sftp, "/mnt/us/documents/koreader.sh.sdr/icon.png", 0o777)
+                safe_chmod(sftp, "/mnt/us/documents/koreader.sdr/icon.png", 0o777)
                 
                 sftp.put(os.path.join(local_launcher_root, "koreader.sdr", "metadata.sh.lua"), "/mnt/us/documents/koreader.sdr/metadata.sh.lua")
+                sftp.put(os.path.join(local_launcher_root, "koreader.sdr", "metadata.sh.lua"), "/mnt/us/documents/koreader.sh.sdr/metadata.sh.lua")
                 safe_chmod(sftp, "/mnt/us/documents/koreader.sdr/metadata.sh.lua", 0o777)
+                safe_chmod(sftp, "/mnt/us/documents/koreader.sh.sdr/metadata.sh.lua", 0o777)
                 
                 print("  Native home screen booklet launcher deployed successfully.")
             else:
