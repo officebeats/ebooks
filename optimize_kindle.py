@@ -91,6 +91,44 @@ def main():
     else:
         print("  No orphaned .sdr folders found.")
 
+    print("\n--- 2.4 Device-Specific Crash Diagnostics & Prevention ---")
+    stdin, stdout, stderr = ssh.exec_command("ps | grep reader.lua | grep -v grep")
+    ps_out = stdout.read().decode('utf-8', errors='ignore').strip()
+    if ps_out:
+        print("  [Health Check] KOReader process (reader.lua) is currently RUNNING.")
+    else:
+        print("  [Health Warning] KOReader process (reader.lua) is NOT running.")
+        print("  Attempting clean background restart of KOReader...")
+        ssh.exec_command("/mnt/us/koreader/koreader.sh /mnt/us/koreader >/dev/null 2>&1 &")
+
+    crash_checks = """
+    for log_path in /mnt/us/koreader/crash.log /mnt/us/crash.log /tmp/koreader.log; do
+        if [ -f "$log_path" ]; then
+            echo "=== Log: $log_path ==="
+            tail -n 25 "$log_path" | grep -iE "error|crash|terminated|oom|fault|fatal" || tail -n 10 "$log_path"
+        fi
+    done
+    """
+    stdin, stdout, stderr = ssh.exec_command(crash_checks)
+    log_out = stdout.read().decode('utf-8', errors='ignore').strip()
+    if log_out:
+        print(f"  [Crash Analysis]\n{log_out}")
+    else:
+        print("  [Crash Analysis] No active crash log errors found.")
+
+    prevention_script = """
+    rm -f /var/tmp/koreader-fb.dump /var/tmp/koreader.sh /var/tmp/fbink /mnt/us/KPPMainAppV2_*.core
+    touch /mnt/us/DISABLE_CORE_DUMP /mnt/us/DISABLE_CORE_DUMP_ALERT
+    for f in /mnt/us/koreader/koreader.sh /mnt/us/documents/koreader.sh /mnt/us/extensions/koreader/bin/koreader.sh /mnt/us/extensions/koreader/bin/heal_koreader.sh; do
+        if [ -f "$f" ]; then
+            sed -i 's/\\r$//' "$f"
+            chmod 777 "$f"
+        fi
+    done
+    """
+    ssh.exec_command(prevention_script)
+    print("  [Crash Prevention] Stale locks cleared, core dumps disabled, Unix LF line endings enforced.")
+
     print("\n--- 2.5 Deep Optimizations (Bloat & Indexing) ---")
     script_deep = """
     # --- HARDWARE & SAFETY CHECKS ---

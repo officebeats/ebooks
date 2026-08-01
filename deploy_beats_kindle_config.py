@@ -495,14 +495,12 @@ def configure_settings_reader_lua(sftp, dry_run=False):
 
 def build_connection(ip, port, user, password):
     """Build SSH connection trying default ports 2222 and 22."""
-    if port:
-        return test_connection(ip, port, user, password)
-    
-    ssh = test_connection(ip, 2222, user, password)
-    if not ssh:
-        print("Port 2222 failed. Trying port 22...")
-        ssh = test_connection(ip, 22, user, password)
-    return ssh
+    ports_to_try = [port, 22] if port and port != 22 else [2222, 22]
+    for p in ports_to_try:
+        ssh = test_connection(ip, p, user, password)
+        if ssh:
+            return ssh
+    return None
 
 def main():
     if hasattr(sys.stdout, 'reconfigure'):
