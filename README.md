@@ -13,6 +13,54 @@ python download_books.py
 ```
 This will list all books and let you choose which ones to download from OneDrive or your Kindle.
 
+## Kindle Fleet Management & `/sync` Automated Workflow
+
+This repository features an automated multi-device Kindle fleet management and sync engine ([SKILL.md](file:///.agents/skills/sync/SKILL.md)). Typing `/sync` or running the underlying Python suite executes a 6-step workflow that maintains, optimizes, deduplicates, and synchronizes your EPUB library across all active Kindles over Wi-Fi (SSH/SFTP).
+
+### 🚀 `/sync` Workflow Pipeline
+
+1. **Step 0: Maintenance & Configuration Baseline (`deploy_beats_kindle_config.py`)**:
+   - Deploys KOReader plugins (`localsend`, `simpleui`, `simpleui_ext`, `koassistant` with Gemini API key).
+   - Deploys user Lua patches (`4-auto-timesync.lua`, `4-auto-dedupe.lua`, `5-auto-darkmode.lua`, etc.).
+   - Uploads custom SVG corner icons and configures No-Framework 1-Tap KUAL & Booklet Launchers.
+   - Enforces a strict plugin baseline (deleting unauthorized bloat plugins).
+
+2. **Step 1: Time, Timezone & Location Synchronization (`sync_kindle_time_and_settings.py`)**:
+   - Synchronizes Kindle hardware/OS system clocks directly to host PC time.
+   - Sets OS timezone to `America/Chicago` (Central Time) and configures KOReader Auto-Nightmode based on Chicago coordinates (`41.8781, -87.6298`).
+
+3. **Step 2: Hardware Scan, Adaptive Resolution, RAM Tuning & Crash Diagnostics (`optimize_kindle.py`)**:
+   - **Hardware Spec Scanning**: Automatically queries CPU, board, OS build (`MX50 Yoshime` PW2 vs `i.MX6 Wario` PW3), and total RAM.
+   - **Hardware Resolution Normalization**: Strips manual `screen_dpi`, `ui_scale`, and `font_scaling` overrides so KOReader runs at each e-ink display's exact native hardware resolution (212 DPI vs 300 DPI).
+   - **Hardware-Adaptive RAM Profiles**:
+     - *Low-RAM (<= 384MB RAM)*: Applies aggressive Linux kernel VM cache reclamation (`sysctl vm.vfs_cache_pressure=150`), font kerning optimization (`font_kerning="fast"`), and cover image cache limits.
+     - *High-RAM (>= 512MB RAM)*: Applies balanced page cache retention (`sysctl vm.vfs_cache_pressure=100`) for instantaneous page flips and high-quality typography (`font_kerning="good"`).
+   - **Amazon Bloat Daemon Sweep**: Suppresses background Amazon telemetry daemons (`phd`, `tod`, `otav3`, `scanlogd`), freeing 20MB–120MB of RAM and eliminating CPU spikes.
+   - **Maximum EPUB Storage Optimization**: Disables Amazon search indexer (`DISABLE_INDEXER`), purges Amazon search index databases (`/mnt/us/system/Search Indexes/*`), clears Amazon thumbnail cache (`/mnt/us/system/thumbnails/*`), clears KOReader cover cache (`/mnt/us/koreader/cache/*`), blocks OTA firmware update downloads (`/mnt/us/update.bin.tmp.partial`), and cleans orphaned `.sdr` folders.
+   - **Crash Diagnostics & Session Preservation**: Inspects `/mnt/us/koreader/crash.log` and `/var/log/messages`, clears stale locks (`/var/tmp/koreader-fb.dump`), disables core dumps, enforces LF line endings, and preserves active `reader.lua` sessions without interrupting KOReader.
+
+4. **Step 3: Automated Library Deduplication (`dedupe_all_libraries.py`)**:
+   - Scans local archive and active Kindles for duplicate EPUB files and orphaned `.sdr` folders, removing older duplicates while preserving reading progress.
+
+5. **Step 4 & 5: Missing Delta Calculation & User Transfer Approval (`sync_local_to_kindle.py --dry-run`)**:
+   - Calculates MD5 checksum deltas across local library and Kindles.
+   - Aggregates missing book counts per device and requests user permission before uploading.
+
+6. **Step 6: Executed Multi-Device Transfer (`sync_local_to_kindle.py`)**:
+   - Transfers missing EPUB books to all approved devices over SSH/SFTP with 0 errors.
+
+---
+
+### 📱 Active Kindle Fleet Registry (`kindle_hosts.json`)
+
+| Device Name Key | IP Address | Hardware Model | Native Resolution | Storage Capacity |
+| :--- | :--- | :--- | :--- | :--- |
+| **`newer-backroom`** | `192.168.68.55` | **Kindle Paperwhite 2 (PW2)** | 212 DPI (758x1024) | 1.3 GB (250MB RAM) |
+| **`white-bedroom`** | `192.168.68.93` | **Kindle Paperwhite 3 White (PW3)** | 300 DPI (1080x1440) | 3.0 GB (502MB RAM) |
+| **`older-floater`** | `192.168.68.82` | **Kindle Paperwhite 2/3** | 212 / 300 DPI | 3.0 GB |
+
+---
+
 ## Books List
 
 Total books cataloged: **313**
