@@ -141,6 +141,20 @@ def main():
         print("  [Crash Analysis] No active crash log errors found.")
 
     prevention_script = """
+    mntroot rw
+    stop fontscanner 2>/dev/null || true
+    stop kfxreader 2>/dev/null || true
+    stop scanner 2>/dev/null || true
+    stop tod 2>/dev/null || true
+    stop phd 2>/dev/null || true
+    stop scanlogd 2>/dev/null || true
+    stop otav3 2>/dev/null || true
+
+    chmod 000 /usr/bin/fontscanner 2>/dev/null || true
+    chmod 000 /usr/bin/kfxreader 2>/dev/null || true
+    chmod 000 /usr/bin/kfxview 2>/dev/null || true
+    mntroot ro
+
     rm -f /var/tmp/koreader-fb.dump /var/tmp/koreader.sh /var/tmp/fbink /mnt/us/KPPMainAppV2_*.core
     touch /mnt/us/DISABLE_CORE_DUMP /mnt/us/DISABLE_CORE_DUMP_ALERT
     for f in /mnt/us/koreader/koreader.sh /mnt/us/documents/koreader.sh /mnt/us/extensions/koreader/bin/koreader.sh /mnt/us/extensions/koreader/bin/heal_koreader.sh; do
@@ -151,7 +165,7 @@ def main():
     done
     """
     ssh.exec_command(prevention_script)
-    print("  [Crash Prevention] Stale locks cleared, core dumps disabled, Unix LF line endings enforced.")
+    print("  [Crash Prevention] Stale locks cleared, crashing native daemons masked, Unix LF line endings enforced.")
 
     print("\n--- 2.5 Deep Optimizations (Bloat & Indexing) ---")
     script_deep = """
