@@ -101,10 +101,10 @@ def main():
     dry_run = args.dry_run
     
     # Resolve from hosts config if nickname is used
-    for nickname in [args.ip, f"{args.ip}_kindle"]:
-        if nickname in hosts_config:
-            device = hosts_config[nickname]
-            args.ip = device.get("ip", args.ip)
+    for key, device in hosts_config.items():
+        ip_addr = device.get("ip", "")
+        if args.ip == key or args.ip in key or args.ip == ip_addr or args.ip in ip_addr:
+            args.ip = ip_addr
             args.port = device.get("port", args.port) or args.port
             args.user = device.get("user", args.user) or args.user
             args.password = device.get("password", args.password) or args.password
