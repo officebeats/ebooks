@@ -814,7 +814,7 @@ def main():
             for item in /mnt/us/documents/*; do
                 [ -e "$item" ] || continue
                 base=$(basename "$item")
-                echo "$base" | grep -iqE "koreader|kual"
+                echo "$base" | grep -iqE "koreader|kual|kindleforge|dictionaries|system|\\.azw2|\\.kual|\\.sh"
                 if [ $? -ne 0 ]; then
                     mv "$item" "/mnt/us/epubs/" 2>/dev/null || rm -rf "$item"
                 fi

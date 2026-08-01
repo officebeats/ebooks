@@ -210,8 +210,8 @@ def main():
         [ -e "$item" ] || continue
         base=$(basename "$item")
         
-        # Check if item name contains "koreader" or "KUAL" (case insensitive)
-        echo "$base" | grep -iqE "koreader|kual"
+        # Check if item is a launcher or system item (case insensitive)
+        echo "$base" | grep -iqE "koreader|kual|kindleforge|dictionaries|system|\\.azw2|\\.kual|\\.sh"
         if [ $? -eq 0 ]; then
             echo "  Preserving launcher item: $base"
         else
