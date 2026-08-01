@@ -202,39 +202,43 @@ def main():
     rm -rf /mnt/us/update.bin /mnt/us/*.bin 2>/dev/null
     mkdir -p /mnt/us/update.bin.tmp.partial 2>/dev/null
 
-    # 4. Safely move all non-KUAL/non-KOReader books to /mnt/us/epubs/ to keep home screen clean
-    echo "Moving non-launcher books from /mnt/us/documents to /mnt/us/epubs/..."
+    # 4. Safely move ONLY ebook files to /mnt/us/epubs/ (preserving all launchers and system items)
+    echo "Isolating ebooks in /mnt/us/documents to /mnt/us/epubs/..."
     mkdir -p /mnt/us/epubs
     MOVED_ANY=0
     for item in /mnt/us/documents/*; do
         [ -e "$item" ] || continue
         base=$(basename "$item")
         
-        # Check if item is a launcher or system item (case insensitive)
-        echo "$base" | grep -iqE "koreader|kual|kindleforge|dictionaries|system|\\.azw2|\\.kual|\\.sh"
-        if [ $? -eq 0 ]; then
-            echo "  Preserving launcher item: $base"
-        else
-            echo "  Moving $base to /mnt/us/epubs/"
-            mv "$item" "/mnt/us/epubs/" 2>/dev/null || rm -rf "$item"
+        # Explicitly skip launchers, booklets, scripts, dictionaries, or system folders
+        if echo "$base" | grep -iqE "koreader|kual|kindleforge|dictionaries|system|\\.azw2$|\\.kual$|\\.sh$"; then
+            continue
+        fi
+        
+        # Move ONLY recognized ebook file formats
+        if echo "$base" | grep -iqE "\\.(epub|mobi|azw3|pdf|txt|docx|cbz|cbr|fb2)$"; then
+            echo "  Moving ebook $base to /mnt/us/epubs/"
+            mv "$item" "/mnt/us/epubs/" 2>/dev/null || true
+            sdr_folder="/mnt/us/documents/${base}.sdr"
+            if [ -d "$sdr_folder" ]; then
+                mv "$sdr_folder" "/mnt/us/epubs/" 2>/dev/null || true
+            fi
             MOVED_ANY=1
         fi
     done
     
-    # 4.5 Clean empty directories in documents
-    find /mnt/us/documents -depth -type d -empty -exec rmdir {} \\; 2>/dev/null
+    # 4.1 Launcher Self-Healing & Verification
+    # Ensure all launcher items are present in /mnt/us/documents/
+    for pattern in "koreader" "kual" "KUAL" "kindleforge"; do
+        for f in /mnt/us/epubs/*${pattern}*; do
+            [ -e "$f" ] || continue
+            echo "  [Self-Healing] Restoring launcher item to /mnt/us/documents/: $(basename "$f")"
+            mv "$f" "/mnt/us/documents/" 2>/dev/null || true
+        done
+    done
     
-    # 4.6 Restart native framework only if KOReader is not running
-    if [ $MOVED_ANY -eq 1 ]; then
-        if ps | grep reader.lua | grep -v grep >/dev/null; then
-            echo "KOReader is currently running. Preserving active KOReader session (skipping framework restart)."
-        else
-            echo "Restarting GUI framework to reload native library..."
-            stop lab126_gui 2>/dev/null || killall cvm 2>/dev/null
-            /bin/sleep 2s
-            start lab126_gui 2>/dev/null || true
-        fi
-    fi
+    # 4.5 Clean empty directories in documents (preserving dictionaries and system)
+    find /mnt/us/documents -mindepth 1 -maxdepth 1 -type d -empty -not -name "dictionaries" -not -name "system" -exec rmdir {} \\; 2>/dev/null || true
     """
     ssh.exec_command(script_deep)
     

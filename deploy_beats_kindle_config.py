@@ -806,20 +806,39 @@ def main():
         else:
             print("  Warning: local launcher files not found!")
 
-        # 8.8 Clean Home Screen Documents (Ensure only KUAL & KOReader Launcher are in /mnt/us/documents)
-        print("\n[Deploy] Isolating native home screen items (moving non-launchers to /mnt/us/epubs/)...")
+        # 8.8 Clean Home Screen Documents (Safely isolate ebooks in /mnt/us/epubs/, preserving launchers)
+        print("\n[Deploy] Isolating native home screen items (moving ebooks to /mnt/us/epubs/)...")
         if not dry_run:
             clean_docs_script = """
             mkdir -p /mnt/us/epubs
             for item in /mnt/us/documents/*; do
                 [ -e "$item" ] || continue
                 base=$(basename "$item")
-                echo "$base" | grep -iqE "koreader|kual|kindleforge|dictionaries|system|\\.azw2|\\.kual|\\.sh"
-                if [ $? -ne 0 ]; then
-                    mv "$item" "/mnt/us/epubs/" 2>/dev/null || rm -rf "$item"
+                
+                # Explicitly skip launchers, booklets, scripts, dictionaries, or system folders
+                if echo "$base" | grep -iqE "koreader|kual|kindleforge|dictionaries|system|\\.azw2$|\\.kual$|\\.sh$"; then
+                    continue
+                fi
+                
+                # Move ONLY recognized ebook file formats
+                if echo "$base" | grep -iqE "\\.(epub|mobi|azw3|pdf|txt|docx|cbz|cbr|fb2)$"; then
+                    mv "$item" "/mnt/us/epubs/" 2>/dev/null || true
+                    sdr_folder="/mnt/us/documents/${base}.sdr"
+                    if [ -d "$sdr_folder" ]; then
+                        mv "$sdr_folder" "/mnt/us/epubs/" 2>/dev/null || true
+                    fi
                 fi
             done
-            find /mnt/us/documents -depth -type d -empty -exec rmdir {} \\; 2>/dev/null
+            
+            # Launcher Self-Healing & Verification
+            for pattern in "koreader" "kual" "KUAL" "kindleforge"; do
+                for f in /mnt/us/epubs/*${pattern}*; do
+                    [ -e "$f" ] || continue
+                    mv "$f" "/mnt/us/documents/" 2>/dev/null || true
+                done
+            done
+            
+            find /mnt/us/documents -mindepth 1 -maxdepth 1 -type d -empty -not -name "dictionaries" -not -name "system" -exec rmdir {} \\; 2>/dev/null || true
             """
             ssh.exec_command(clean_docs_script)
             print("  Home screen isolated. Only KUAL & KOReader launchers remain in /mnt/us/documents.")

@@ -11,7 +11,7 @@ When the user types `/sync` or requests to sync their ebooks, you MUST follow th
 Before syncing, ensure all active Kindles have the latest plugins, patches, launchers, and configurations.
 For each Kindle in `kindle_hosts.json`, you MUST run the deployment script (`python deploy_beats_kindle_config.py --ip <kindle_nickname>`).
 **MANDATORY BASELINE ENFORCEMENTS:**
-1. **Home Screen Document Isolation**: Moves non-launcher books out of `/mnt/us/documents/` into `/mnt/us/epubs/` so that **ONLY KUAL and KOReader launchers** appear on the native Kindle home screen. Tapping KOReader from the home screen is the primary entry point for launching KOReader.
+1. **Home Screen Document Isolation & Launcher Self-Healing**: Moves ONLY recognized ebook files (`.epub`, `.mobi`, `.azw3`, `.pdf`, `.txt`, `.docx`, `.cbz`, `.cbr`, `.fb2`) out of `/mnt/us/documents/` into `/mnt/us/epubs/`, explicitly protecting all KUAL booklets, KOReader booklets, `.sh` scripts, dictionaries, and system folders. Runs automated self-healing to verify and restore KUAL/KOReader launchers on the native Kindle home screen.
 2. **Hardware-Adaptive Auto-Boot**: Injects upstart auto-boot configuration (`koreader-autoboot.conf` in `/etc/upstart` or `/etc/init` adapted to OS version) to auto-launch KOReader on fresh boot or reboot.
 3. **Smart Power & SSH Keep-Alive (`3-keep-ssh-alive-charging.lua`)**: When plugged in (charging), prevents screen saver (`preventScreenSaver = 1`) so the device stays awake for SSH sync tool operations. When unplugged (battery mode), operates normally to maximize battery life.
 4. **Automated Background Modifications**: Deploys `4-auto-timesync.lua` (NTP time sync on wake) and `4-auto-dedupe.lua` (storage deduplication on wake).
