@@ -945,6 +945,17 @@ end script
 EOF
             chmod 644 ${UPSTART_DIR}/keep-wifi-alive.conf 2>/dev/null || true
 
+            cat << 'EOF' > ${UPSTART_DIR}/koreader-ssh-autostart.conf
+start on started lipcd
+
+script
+    if ! ps | grep -v grep | grep -q dropbear; then
+        /mnt/us/koreader/plugins/SSH.koplugin/bin/dropbear -p 2222 -R 2>/dev/null || /usr/sbin/dropbear -p 2222 -R 2>/dev/null || true
+    fi
+end script
+EOF
+            chmod 644 ${UPSTART_DIR}/koreader-ssh-autostart.conf 2>/dev/null || true
+
             if ! grep -q "cloudcomm.amazon.com" /etc/hosts 2>/dev/null; then
                 echo "127.0.0.1 todo.amazon.com todo-g7.amazon.com kindle-time.amazon.com cloudcomm.amazon.com ffs.amazon.com" >> /etc/hosts 2>/dev/null || true
             fi
