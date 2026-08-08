@@ -913,6 +913,22 @@ end script
 EOF
             chmod 644 ${UPSTART_DIR}/suppress-cloud-popup.conf 2>/dev/null || true
 
+            cat << 'EOF' > ${UPSTART_DIR}/koreader-watchdog.conf
+start on started lab126_gui
+
+script
+    while true; do
+        /bin/sleep 15s
+        IS_READER=$(ps | grep reader.lua | grep -v grep || true)
+        IS_GUI=$(ps | grep cvm | grep -v grep || true)
+        if [ -z "$IS_READER" ] && [ -z "$IS_GUI" ]; then
+            start lab126_gui 2>/dev/null || true
+        fi
+    done
+end script
+EOF
+            chmod 644 ${UPSTART_DIR}/koreader-watchdog.conf 2>/dev/null || true
+
             if ! grep -q "cloudcomm.amazon.com" /etc/hosts 2>/dev/null; then
                 echo "127.0.0.1 todo.amazon.com todo-g7.amazon.com kindle-time.amazon.com cloudcomm.amazon.com ffs.amazon.com" >> /etc/hosts 2>/dev/null || true
             fi
