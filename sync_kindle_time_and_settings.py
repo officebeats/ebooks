@@ -121,34 +121,46 @@ def update_koreader_settings(sftp, kosync_creds):
             else:
                 content = content.replace("return {", f'return {{\n    {value}')
 
-        # Inject Kosync credentials
-        if kosync_creds:
-            uname = kosync_creds['username']
-            phash = kosync_creds['hash']
-            endpoint = kosync_creds.get('endpoint', 'https://sync.koreader.rocks')
-            
-            if '["kosync_username"]' in content:
-                content = re.sub(r'\["kosync_username"\]\s*=\s*"[^"]*",?', f'["kosync_username"] = "{uname}",', content)
+        # Default fleet Kosync credentials fallback
+        if not kosync_creds:
+            kosync_creds = {
+                'username': 'beats_kindle_fleet_2026',
+                'hash': '206322af989e99a154e2ab6e887f3281',
+                'endpoint': 'https://sync.koreader.rocks'
+            }
+
+        # Inject Kosync credentials & auto-sync settings
+        uname = kosync_creds['username']
+        phash = kosync_creds['hash']
+        endpoint = kosync_creds.get('endpoint', 'https://sync.koreader.rocks')
+
+        str_settings = {
+            'kosync_username': uname,
+            'kosync_password_hash': phash,
+            'kosync_endpoint': endpoint,
+            'kosync_checksum_method': 'filename'
+        }
+        for k, v in str_settings.items():
+            pattern = rf'\["{k}"\]\s*=\s*"[^"]*",?\n?'
+            if f'["{k}"]' in content:
+                content = re.sub(pattern, f'["{k}"] = "{v}",\n', content)
             else:
-                content = content.replace("return {", f'return {{\n    ["kosync_username"] = "{uname}",')
-                
-            if '["kosync_password_hash"]' in content:
-                content = re.sub(r'\["kosync_password_hash"\]\s*=\s*"[^"]*",?', f'["kosync_password_hash"] = "{phash}",', content)
+                content = content.replace("return {", f'return {{\n    ["{k}"] = "{v}",')
+
+        bool_flags = ['kosync_auto_sync', 'kosync_sync_on_open', 'kosync_sync_on_close']
+        for flag in bool_flags:
+            pattern = rf'\["{flag}"\]\s*=\s*[^,\n]+,?\n?'
+            if f'["{flag}"]' in content:
+                content = re.sub(pattern, f'["{flag}"] = true,\n', content)
             else:
-                content = content.replace("return {", f'return {{\n    ["kosync_password_hash"] = "{phash}",')
-                
-            if '["kosync_endpoint"]' in content:
-                content = re.sub(r'\["kosync_endpoint"\]\s*=\s*"[^"]*",?', f'["kosync_endpoint"] = "{endpoint}",', content)
-            else:
-                content = content.replace("return {", f'return {{\n    ["kosync_endpoint"] = "{endpoint}",')
+                content = content.replace("return {", f'return {{\n    ["{flag}"] = true,')
 
         with open(local_temp, "w", encoding="utf-8") as f:
             f.write(content)
             
         sftp.put(local_temp, remote_path)
         print("  KOReader settings updated successfully!")
-        if kosync_creds:
-            print("  Kosync credentials cloned to this device.")
+        print("  Kosync progress auto-sync active for this device.")
     except Exception as e:
         print(f"  Error modifying settings.reader.lua: {e}")
     finally:
