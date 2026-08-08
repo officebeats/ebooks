@@ -836,30 +836,33 @@ def main():
                 [ -e "$item" ] || continue
                 base=$(basename "$item")
                 
-                # Explicitly skip launchers, booklets, scripts, dictionaries, or system folders
-                if echo "$base" | grep -iqE "koreader|kual|kindleforge|dictionaries|system|\\.azw2$|\\.kual$|\\.sh$"; then
+                # Protect KOReader & KUAL launchers and dictionaries
+                if echo "$base" | grep -iqE "koreader|kual|KUAL|dictionaries"; then
                     continue
                 fi
                 
-                # Move ONLY recognized ebook file formats
-                if echo "$base" | grep -iqE "\\.(epub|mobi|azw3|pdf|txt|docx|cbz|cbr|fb2)$"; then
+                # Move ebook files to /mnt/us/epubs/
+                if echo "$base" | grep -iqE "\\.(epub|mobi|azw3|azw|azw1|pdf|txt|docx|cbz|cbr|fb2|prc|tpz|html)$"; then
                     mv "$item" "/mnt/us/epubs/" 2>/dev/null || true
-                    sdr_folder="/mnt/us/documents/${base}.sdr"
-                    if [ -d "$sdr_folder" ]; then
-                        mv "$sdr_folder" "/mnt/us/epubs/" 2>/dev/null || true
+                    if [ -d "/mnt/us/documents/${base}.sdr" ]; then
+                        mv "/mnt/us/documents/${base}.sdr" "/mnt/us/epubs/" 2>/dev/null || true
                     fi
+                else
+                    # Delete non-launcher items, logs, samples, and user guides from native home screen
+                    rm -rf "$item" 2>/dev/null || true
                 fi
             done
             
             # Launcher Self-Healing & Verification
-            for pattern in "koreader" "kual" "KUAL" "kindleforge"; do
+            for pattern in "koreader" "kual" "KUAL"; do
                 for f in /mnt/us/epubs/*${pattern}*; do
                     [ -e "$f" ] || continue
                     mv "$f" "/mnt/us/documents/" 2>/dev/null || true
                 done
             done
             
-            find /mnt/us/documents -mindepth 1 -maxdepth 1 -type d -empty -not -name "dictionaries" -not -name "system" -exec rmdir {} \\; 2>/dev/null || true
+            find /mnt/us/documents -mindepth 1 -maxdepth 1 -type d -not -name "dictionaries" -not -name "*.sdr" -exec rm -rf {} \\; 2>/dev/null || true
+            lipc-set-prop com.lab126.booklet.home setFilterId 1 2>/dev/null || true
             """
             ssh.exec_command(clean_docs_script)
             print("  Home screen isolated. Only KUAL & KOReader launchers remain in /mnt/us/documents.")

@@ -20,7 +20,7 @@ This repository features an automated multi-device Kindle fleet management and s
 ### 🚀 `/sync` Workflow Pipeline
 
 1. **Step 0: Maintenance, Clean Baseline & Launcher Enforcement (`deploy_beats_kindle_config.py`)**:
-   - **Home Screen Document Isolation & Launcher Self-Healing**: Moves ONLY recognized ebook formats (`.epub`, `.mobi`, `.azw3`, `.pdf`, `.txt`, `.docx`, `.cbz`, `.cbr`, `.fb2`) into `/mnt/us/epubs/`, explicitly protecting all KUAL booklets, KOReader booklets, `.sh` scripts, dictionaries, and system folders. Includes automated self-healing to verify and restore KUAL/KOReader launchers on the native Kindle home screen.
+   - **Launcher-Only Native Amazon Home Screen**: Isolates `/mnt/us/documents/` so ONLY KOReader and KUAL launchers appear on the native Amazon Kindle Home Screen. All ebooks are moved to `/mnt/us/epubs/`, and all native Amazon user guides, sample booklets, and non-launcher logs are purged from the home screen directory.
    - **Default No-Framework Mode (`--framework_stop`)**: Enforces `--framework_stop` by default across all launchers (Booklet, KUAL, auto-boot) so KOReader always stops native `lab126_gui`, freeing 45MB-60MB of RAM for performance and battery life.
    - **2D Cover Grid/List Support & Fast E-Ink Scaling**: Preserves 2D cover rendering (`list_image_meta`/`mosaic`) with hardware fast-scaling (`image_scaling = "fast"`), folder cover patches (`2-browser-folder-cover.lua`), non-ebook image guards (`2-disable-image-docs.lua`), and pre-launch memory flushes (`echo 3 > /proc/sys/vm/drop_caches`).
    - **Persistent Cloud Popup Suppression**: Injects `/etc/upstart/suppress-cloud-popup.conf` and `/etc/hosts` loopbacks so the native "Cloud not available" popup is permanently suppressed on boot.
