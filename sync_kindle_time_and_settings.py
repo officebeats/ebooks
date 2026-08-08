@@ -208,19 +208,20 @@ def main():
             UPSTART_DIR="/etc/upstart"
             [ -d /etc/init ] && UPSTART_DIR="/etc/init"
             cat << 'EOF' > ${UPSTART_DIR}/keep-wifi-alive.conf
-start on started lab126_gui
+start on started lipcd
 
 script
     while true; do
         is_charging=$(lipc-get-prop com.lab126.powerd isCharging 2>/dev/null || echo 0)
-        if [ "$is_charging" = "1" ]; then
+        if [ "$is_charging" = "1" ] || [ "$is_charging" = "1\n" ]; then
             lipc-set-prop com.lab126.wifid enable 1 2>/dev/null || true
             lipc-set-prop com.lab126.powerd preventScreenSaver 1 2>/dev/null || true
         fi
-        sleep 60
+        sleep 15
     done
 end script
 EOF
+            chmod 644 ${UPSTART_DIR}/keep-wifi-alive.conf 2>/dev/null || true
             mntroot ro
             """
             run_cmd(ssh, autoboot_wifi)
