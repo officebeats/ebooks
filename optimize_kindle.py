@@ -153,12 +153,34 @@ def main():
     stop todo.kaf 2>/dev/null || true
     stop cloudcomm 2>/dev/null || true
 
+    UPSTART_DIR="/etc/upstart"
+    [ -d /etc/init ] && UPSTART_DIR="/etc/init"
+    cat << 'EOF' > ${UPSTART_DIR}/suppress-cloud-popup.conf
+start on started lab126_gui
+
+script
+    stop cloudcomm 2>/dev/null || true
+    stop todo 2>/dev/null || true
+    stop todo.kaf 2>/dev/null || true
+    stop phd 2>/dev/null || true
+    stop tod 2>/dev/null || true
+    stop otav3 2>/dev/null || true
+    stop scanlogd 2>/dev/null || true
+
+    for sec in 1 3 5 10 15 30 60; do
+        /bin/sleep $sec
+        lipc-set-prop com.lab126.booklet.home setFilterId 1 2>/dev/null || true
+    done
+end script
+EOF
+    chmod 644 ${UPSTART_DIR}/suppress-cloud-popup.conf 2>/dev/null || true
+
     # Force native home screen filter to Downloaded items only (Filter ID 1)
     lipc-set-prop com.lab126.booklet.home setFilterId 1 2>/dev/null || true
 
     # Redirect Amazon TODO cloud pinging to localhost
-    if ! grep -q "todo.amazon.com" /etc/hosts 2>/dev/null; then
-        echo "127.0.0.1 todo.amazon.com todo-g7.amazon.com kindle-time.amazon.com" >> /etc/hosts 2>/dev/null || true
+    if ! grep -q "cloudcomm.amazon.com" /etc/hosts 2>/dev/null; then
+        echo "127.0.0.1 todo.amazon.com todo-g7.amazon.com kindle-time.amazon.com cloudcomm.amazon.com ffs.amazon.com" >> /etc/hosts 2>/dev/null || true
     fi
 
     chmod 000 /usr/bin/fontscanner 2>/dev/null || true

@@ -381,7 +381,11 @@ def configure_koreader_sh(sftp, dry_run=False):
                 "sysctl vm.vfs_cache_pressure=100 2>/dev/null || true\n"
                 "sysctl vm.dirty_ratio=20 2>/dev/null || true\n"
                 "echo 3 > /proc/sys/vm/drop_caches 2>/dev/null || true\n"
-                "rm -f /var/tmp/koreader-fb.dump /tmp/koreader* /tmp/dropbear* 2>/dev/null || true\n\n"
+                "# Enforce No-Framework mode by default\n"
+                "case \"$*\" in\n"
+                "    *framework_stop*) ;;\n"
+                "    *) set -- \"$@\" --framework_stop ;;\n"
+                "esac\n\n"
                 "# Relocate and rotate KPPMainAppV2 crash logs to hidden folder\n"
                 "mkdir -p /mnt/us/system/crash_logs\n"
                 "for f in /mnt/us/documents/KPPMainAppV2_*; do\n"
@@ -883,9 +887,43 @@ def main():
             # 2. Tell the Kindle OS to apply Chicago offset to the top-bar lockscreen clock
             ssh.exec_command("lipc-set-prop com.lab126.wan timezone America/Chicago")
 
-            # 2.5 Force native home screen filter to Downloaded items only and suppress Cloud pop-ups
-            ssh.exec_command("lipc-set-prop com.lab126.booklet.home setFilterId 1 2>/dev/null || true")
-            ssh.exec_command("stop todo 2>/dev/null; stop todo.kaf 2>/dev/null; stop cloudcomm 2>/dev/null")
+            # 2.5 Force native home screen filter to Downloaded items only and permanently suppress Cloud pop-ups
+            suppress_script = """
+            mntroot rw
+            UPSTART_DIR="/etc/upstart"
+            [ -d /etc/init ] && UPSTART_DIR="/etc/init"
+            
+            cat << 'EOF' > ${UPSTART_DIR}/suppress-cloud-popup.conf
+start on started lab126_gui
+
+script
+    stop cloudcomm 2>/dev/null || true
+    stop todo 2>/dev/null || true
+    stop todo.kaf 2>/dev/null || true
+    stop phd 2>/dev/null || true
+    stop tod 2>/dev/null || true
+    stop otav3 2>/dev/null || true
+    stop scanlogd 2>/dev/null || true
+
+    for sec in 1 3 5 10 15 30 60; do
+        /bin/sleep $sec
+        lipc-set-prop com.lab126.booklet.home setFilterId 1 2>/dev/null || true
+    done
+end script
+EOF
+            chmod 644 ${UPSTART_DIR}/suppress-cloud-popup.conf 2>/dev/null || true
+
+            if ! grep -q "cloudcomm.amazon.com" /etc/hosts 2>/dev/null; then
+                echo "127.0.0.1 todo.amazon.com todo-g7.amazon.com kindle-time.amazon.com cloudcomm.amazon.com ffs.amazon.com" >> /etc/hosts 2>/dev/null || true
+            fi
+            mntroot ro
+
+            lipc-set-prop com.lab126.booklet.home setFilterId 1 2>/dev/null || true
+            stop todo 2>/dev/null || true
+            stop todo.kaf 2>/dev/null || true
+            stop cloudcomm 2>/dev/null || true
+            """
+            ssh.exec_command(suppress_script)
             
             # 3. Inject TZ into KOReader's launch script so Lua os.date("*t") evaluates local time flawlessly
             ssh.exec_command("sed -i '/export LC_ALL/a export TZ=CST6CDT' /mnt/us/koreader/koreader.sh")

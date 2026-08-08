@@ -108,6 +108,19 @@ def update_koreader_settings(sftp, kosync_creds):
         else:
             content = content.replace("return {", 'return {\n    ["twelve_hour_clock"] = true,')
 
+        # Wi-Fi & Power keep-alive settings
+        wifi_tweaks = {
+            '["prevent_standby_while_charging"]': '["prevent_standby_while_charging"] = true,',
+            '["wifi_auto_turn_off"]': '["wifi_auto_turn_off"] = false,',
+            '["wifi_timeout_seconds"]': '["wifi_timeout_seconds"] = 0,',
+            '["auto_suspend"]': '["auto_suspend"] = false,',
+        }
+        for key, value in wifi_tweaks.items():
+            if key in content:
+                content = re.sub(re.escape(key) + r'\s*=\s*[^,\n]+,?', value, content)
+            else:
+                content = content.replace("return {", f'return {{\n    {value}')
+
         # Inject Kosync credentials
         if kosync_creds:
             uname = kosync_creds['username']
@@ -174,6 +187,31 @@ def main():
             run_cmd(ssh, "lipc-set-prop com.lab126.wan timezone America/Chicago")
             # Create timezone symlink just in case (needs rw)
             run_cmd(ssh, "mntroot rw && ln -sf /usr/share/zoneinfo/America/Chicago /etc/localtime && mntroot ro")
+            
+            print("  Configuring Wi-Fi persistent keep-alive daemon...")
+            run_cmd(ssh, "lipc-set-prop com.lab126.wifid enable 1")
+            
+            autoboot_wifi = """
+            mntroot rw
+            UPSTART_DIR="/etc/upstart"
+            [ -d /etc/init ] && UPSTART_DIR="/etc/init"
+            cat << 'EOF' > ${UPSTART_DIR}/keep-wifi-alive.conf
+start on started lab126_gui
+
+script
+    while true; do
+        is_charging=$(lipc-get-prop com.lab126.powerd isCharging 2>/dev/null || echo 0)
+        if [ "$is_charging" = "1" ]; then
+            lipc-set-prop com.lab126.wifid enable 1 2>/dev/null || true
+            lipc-set-prop com.lab126.powerd preventScreenSaver 1 2>/dev/null || true
+        fi
+        sleep 60
+    done
+end script
+EOF
+            mntroot ro
+            """
+            run_cmd(ssh, autoboot_wifi)
             
             sftp = ssh.open_sftp()
             update_koreader_settings(sftp, kosync_creds)

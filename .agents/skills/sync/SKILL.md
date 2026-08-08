@@ -12,10 +12,12 @@ Before syncing, ensure all active Kindles have the latest plugins, patches, laun
 For each Kindle in `kindle_hosts.json`, you MUST run the deployment script (`python deploy_beats_kindle_config.py --ip <kindle_nickname>`).
 **MANDATORY BASELINE ENFORCEMENTS:**
 1. **Home Screen Document Isolation & Launcher Self-Healing**: Moves ONLY recognized ebook files (`.epub`, `.mobi`, `.azw3`, `.pdf`, `.txt`, `.docx`, `.cbz`, `.cbr`, `.fb2`) out of `/mnt/us/documents/` into `/mnt/us/epubs/`, explicitly protecting all KUAL booklets, KOReader booklets, `.sh` scripts, dictionaries, and system folders. Runs automated self-healing to verify and restore KUAL/KOReader launchers on the native Kindle home screen.
-2. **Hardware-Adaptive Auto-Boot**: Injects upstart auto-boot configuration (`koreader-autoboot.conf` in `/etc/upstart` or `/etc/init` adapted to OS version) to auto-launch KOReader on fresh boot or reboot.
-3. **Smart Power & SSH Keep-Alive (`3-keep-ssh-alive-charging.lua`)**: When plugged in (charging), prevents screen saver (`preventScreenSaver = 1`) so the device stays awake for SSH sync tool operations. When unplugged (battery mode), operates normally to maximize battery life.
-4. **Automated Background Modifications**: Deploys `4-auto-timesync.lua` (NTP time sync on wake) and `4-auto-dedupe.lua` (storage deduplication on wake).
-5. **Strict Plugin Baseline**: Automatically purges unauthorized bloat plugins.
+2. **Default No-Framework Mode (`--framework_stop`)**: Enforces `--framework_stop` by default across all launchers (Booklet, KUAL, auto-boot) so KOReader always stops native `lab126_gui`, freeing 45MB-60MB of RAM for performance and battery life.
+3. **2D Cover Grid/List Support & Fast E-Ink Scaling**: Preserves 2D cover rendering (`list_image_meta`/`mosaic`) with hardware fast-scaling (`image_scaling = "fast"`), folder cover patches (`2-browser-folder-cover.lua`), non-ebook image guards (`2-disable-image-docs.lua`), and pre-launch memory flushes (`echo 3 > /proc/sys/vm/drop_caches`).
+4. **Persistent Cloud Popup Suppression**: Injects `/etc/upstart/suppress-cloud-popup.conf` and `/etc/hosts` loopbacks so the native "Cloud not available" popup is permanently suppressed on boot.
+5. **Smart Power & SSH Keep-Alive (`3-keep-ssh-alive-charging.lua`)**: When plugged in (charging), prevents screen saver (`preventScreenSaver = 1`) so the device stays awake for SSH sync tool operations. When unplugged (battery mode), operates normally to maximize battery life.
+6. **Automated Background Modifications**: Deploys `4-auto-timesync.lua` (NTP time sync on wake) and `4-auto-dedupe.lua` (storage deduplication on wake).
+7. **Strict Plugin Baseline**: Automatically purges unauthorized bloat plugins.
 **Command:** `python deploy_beats_kindle_config.py --ip <kindle_nickname>`
 
 ## Step 1: Sync Kindle Time & Settings
